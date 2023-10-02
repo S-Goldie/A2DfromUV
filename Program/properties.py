@@ -38,11 +38,8 @@ class Material_Methode:
         elif self._material == "NiPS3":
             return 370
         
-        elif self._material == "FePS3":
-            return 350
-        
-        elif self._material == "MnPS3":
-            return 310
+        elif self._material == "RuCl3":
+            return 370
         
         elif self._material == "PtSe2":
             return 800
@@ -64,11 +61,8 @@ class Material_Methode:
         elif self._material == "NiPS3":
             return 460
         
-        elif self._material == "FePS2":
-            return 500
-        
-        elif self._material == "MnPS3":
-            return 400
+        elif self._material == "RuCl3":
+            return 555
         
         elif self._material == "PtSe2":
             return 255
@@ -104,6 +98,18 @@ class Material_Methode:
                 return -0.0185
             elif self._methode == "Abs":
                 return -0.0009
+
+        elif self._material == "RuCl3":
+            if self._methode == "Ext":
+                return -0.0019
+            elif self._methode == "Abs":
+                return -0.0018
+
+        elif self._material == "PtSe2":
+            if self._methode == "Ext":
+                return 0.0134
+            elif self._methode == "Abs":
+                return 0.0141
             
     @property 
     def B1(self):
@@ -130,11 +136,24 @@ class Material_Methode:
                 return 1.83
             elif self._methode == "Abs":
                 return 1.79
+
         elif self._material == "NiPS3":
             if self._methode == "Ext":
                 return 1.72
             elif self._methode == "Abs":
                 return 1.69
+
+        elif self._material == "RuCl3":
+            if self._methode == "Ext":
+                return 1.68
+            elif self._methode == "Abs":
+                return 1.75
+
+        elif self._material == "PtSe2":
+            if self._methode == "Ext":
+                return -0.06
+            elif self._methode == "Abs":
+                return -0.11
             
     @property 
     def A2(self):
@@ -167,6 +186,18 @@ class Material_Methode:
                 return 0.0003
             elif self._methode == "Abs":
                 return 0.0011
+
+        elif self._material == "RuCl3":
+            if self._methode == "Ext":
+                return -0.001
+            elif self._methode == "Abs":
+                return -0.0009
+
+        elif self._material == "PtSe2":
+            if self._methode == "Ext":
+                return 0.0035
+            elif self._methode == "Abs":
+                return 0.0042
     
     @property 
     def B2(self):
