@@ -237,22 +237,15 @@ class Material_Methode:
             elif self._methode == "Abs":
                 return 3.414
         
-        elif self._material == "FePS3":
+        elif self._material == "RuCl3":
             if self._methode == "Ext":
-                return 3.199
+                return 3.35
             elif self._methode == "Abs":
-                return 3.231
-        
-        elif self._material == "MnPS3":
-            if self._methode == "Ext":
-                return "Need value here from approx analysis"
-            elif self._methode == "Abs":
-                return "Need value here from approx analysis"
+                return 3.305
         
         elif self._material == "PtSe2":
             if self._methode == "Ext":
-                return 1.08
-                #return 3.639
+                return 1.97
             elif self._methode == "Abs":
                 return 3.508
             
@@ -288,21 +281,15 @@ class Material_Methode:
             elif self._methode == "Abs":
                 return 3.243
         
-        elif self._material == "FePS3":
+        elif self._material == "RuCl3":
             if self._methode == "Ext":
-                return 3.041
+                return 3.2
             elif self._methode == "Abs":
-                return 3.043
-        
-        elif self._material == "MnPS3":
-            if self._methode == "Ext":
-                return "Need value here from approx analysis"
-            elif self._methode == "Abs":
-                return "Need value here from approx analysis"
+                return 3.262
         
         elif self._material == "PtSe2":
             if self._methode == "Ext":
-                return 1.07
+                return 1.81
             elif self._methode == "Abs":
                 return 3.206
             
@@ -337,11 +324,23 @@ class Material_Methode:
                 return 5.8
             elif self._methode == "Abs":
                 return 2.92
+            
+        elif self._material == "RuCl3":
+            if self._methode == "Ext":
+                return 5.30
+            elif self._methode == "Abs":
+                return 6.47
+
+        elif self._material == "PtSe2":
+            if self._methode == "Ext":
+                return 3.42
+            elif self._methode == "Abs":
+                return 5.08
        
     @property 
     def normwavelength(self):
         if self._material == "WS2":
-            return 295
+            return 235
             
         elif self._material == "MoS2":
             return 345
@@ -355,18 +354,17 @@ class Material_Methode:
         elif self._material == "NiPS3":
             return 460
         
-        elif self._material == "FePS3":
+        elif self._material == "RuCl3":
             return 500
         
         elif self._material == "PtSe2":
-            return 255
-        
-        
+            return 1149
+
     @property 
     def coeff(self):
         if self._material == "WS2":
             if self._methode == "Ext":
-                return 0
+                return 47.7
             elif self._methode == "Abs":
                 return 0
         
@@ -394,23 +392,38 @@ class Material_Methode:
             elif self._methode == "Abs":
                 return 0
 
-            
+        elif self._material == "RuCl3":
+            if self._methode == "Ext":
+                return 14.8
+            elif self._methode == "Abs":
+                return 0
+
+        elif self._material == "PtSe2":
+            if self._methode == "Ext":
+                return 0
+            elif self._methode == "Abs":
+                return 0
     
-    def index(self, lamb:float, liste: list)->int:                             #function to get index from given value out of list
+    
+    def index(self, lamb:float, liste: list)->int:
+        """returns the index of a specific value from a list"""
         self._lamb = lamb
         self._liste = liste
         return int(np.argmin(abs(self._liste - self._lamb)))
 
 
-    def energy_wavelength(self,lamb : float)->float:                           #calculate energy in eV to given wavelength in nm           
+    def energy_wavelength(self,lamb : float)->float:
+        """returns energy in eV from wavelength in nm"""           
         return (h*c)/(lamb*10**-9*e)
 
     
-    def wavelength_energy(self,lamb : float)->float:                           #calculate wavelength in nm given energy in eV
+    def wavelength_energy(self,lamb : float)->float:
+        """returns wavelength in nm given energy in eV"""
         return (h*c*10**9)/(lamb*e)
 
 
-    def length (self, spectrum_y: list, wavelength_x : list)->float: 
+    def length (self, spectrum_y: list, wavelength_x : list)->float:
+        """returns the nanoflake length using published spectroscopic metrics"""
         self._spectrum = spectrum_y
         self._wavelength = wavelength_x
         
@@ -420,7 +433,8 @@ class Material_Methode:
         return length
     
 
-    def thickness(self, exitonwavelength : float)->float: 
+    def thickness(self, exitonwavelength : float)->float:
+        """returns nanoflake layer number using new exponential metrics"""
         self._exitonwavelength = exitonwavelength
         exitonenergy=self.energy_wavelength(self._exitonwavelength)
         
@@ -433,7 +447,3 @@ class Material_Methode:
                 return abs(1+self.N0*np.log(((self.E_ML-self.E_bulk)/(dif))))     
             else: 
                 return 50
-    
-
-
-    
