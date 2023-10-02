@@ -17,16 +17,11 @@ Estimate of error in wavelength updated, new experimental form to use the gradie
 import numpy as np
 import matplotlib.pyplot as plt
 from statsmodels.nonparametric.smoothers_lowess import lowess
-#from scipy.constants import h,c,e
 from tkinter.filedialog import askopenfilename
-#from matplotlib.widgets import Cursor
 from scipy import interpolate
-#import scipy.optimize
 from properties import *
-#import tkinter as tk
 from tkinter import Tk
 from GUI import material,methode
-#import timeit
 """----------------------------------------------------------------------------"""
 
 
