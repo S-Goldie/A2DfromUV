@@ -340,7 +340,7 @@ class Material_Methode:
     @property 
     def normwavelength(self):
         if self._material == "WS2":
-            return 235
+            return 295
             
         elif self._material == "MoS2":
             return 345
@@ -355,7 +355,7 @@ class Material_Methode:
             return 460
         
         elif self._material == "RuCl3":
-            return 500
+            return 555
         
         elif self._material == "PtSe2":
             return 1149
@@ -363,26 +363,26 @@ class Material_Methode:
     @property 
     def coeff(self):
         if self._material == "WS2":
-            if self._methode == "Ext":
+            if self._methode == "Ext":    #wavelength 235 nm
                 return 47.7
             elif self._methode == "Abs":
                 return 0
         
         elif self._material == "MoS2":
-            if self._methode == "Ext":
+            if self._methode == "Ext":    #wavelength 345 nm
                 return 69
             elif self._methode == "Abs":
                 return 0
         
         elif self._material == "WSe2":
-            if self._methode == "Ext":
-                return 0
+            if self._methode == "Ext":    #wavelength 440 nm
+                return 40
             elif self._methode == "Abs":
                 return 0
         
         elif self._material == "MoSe2":
-            if self._methode == "Ext":
-                return 0
+            if self._methode == "Ext":    #wavelength 358 nm
+                return 50
             elif self._methode == "Abs":
                 return 0
             
@@ -392,7 +392,7 @@ class Material_Methode:
             elif self._methode == "Abs":
                 return 0
 
-        elif self._material == "RuCl3":
+        elif self._material == "RuCl3":    #wavelength 500 nm
             if self._methode == "Ext":
                 return 14.8
             elif self._methode == "Abs":
