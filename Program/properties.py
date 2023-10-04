@@ -360,29 +360,31 @@ class Material_Methode:
         elif self._material == "PtSe2":
             return 1149
 
+    ##parameters for concentration        
+        
     @property 
     def coeff(self):
         if self._material == "WS2":
-            if self._methode == "Ext":    #wavelength 235 nm
-                return 47.7
+            if self._methode == "Ext":
+                return 235, 47.7 ###at 235
             elif self._methode == "Abs":
                 return 0
         
         elif self._material == "MoS2":
-            if self._methode == "Ext":    #wavelength 345 nm
-                return 69
+            if self._methode == "Ext":
+                return 345, 69
             elif self._methode == "Abs":
                 return 0
         
         elif self._material == "WSe2":
-            if self._methode == "Ext":    #wavelength 440 nm
-                return 40
+            if self._methode == "Ext":
+                return 440, 40
             elif self._methode == "Abs":
                 return 0
         
         elif self._material == "MoSe2":
-            if self._methode == "Ext":    #wavelength 358 nm
-                return 50
+            if self._methode == "Ext":
+                return 358, 50
             elif self._methode == "Abs":
                 return 0
             
@@ -391,18 +393,167 @@ class Material_Methode:
                 return 0
             elif self._methode == "Abs":
                 return 0
-
-        elif self._material == "RuCl3":    #wavelength 500 nm
+            
+        elif self._material == "FePS3":
             if self._methode == "Ext":
-                return 14.8
+                return 0
             elif self._methode == "Abs":
                 return 0
-
+            
         elif self._material == "PtSe2":
             if self._methode == "Ext":
                 return 0
             elif self._methode == "Abs":
                 return 0
+            
+        elif self._material == "RuCl3":
+            if self._methode == "Ext":
+                return 500, 14.8
+            elif self._methode == "Abs":
+                return 0
+#-----------------------Fit parameters for exponential form--------------------
+#------------------------------------------------------------------------------
+
+    @property 
+    def R(self):
+        if self._material == "WS2":
+            return -26.692
+        
+        if self._material == "MoS2":
+            return -41.646
+        
+        if self._material == "WSe2":
+            return -31.084
+        
+        if self._material == "MoSe2":
+            return -40.242
+        
+        if self._material == "RuCl3":
+            return -24.335
+        
+        if self._material == "PtSe2":
+            return -12.281
+    
+    @property   
+    def dR(self):
+        if self._material == "WS2":
+            return 1.453
+        
+        if self._material == "MoS2":
+            return 1.458
+        
+        if self._material == "WSe2":
+            return 5.710
+        
+        if self._material == "MoSe2":
+            return 2.929
+        
+        if self._material == "RuCl3":
+            return 1.994
+        
+        if self._material == "PtSe2":
+            return 0.867
+        
+    @property 
+    def shift(self):
+        if self._material == "WS2":
+            return 1.957
+        
+        if self._material == "MoS2":
+            return 1.828
+        
+        if self._material == "WSe2":
+            return 1.650
+        
+        if self._material == "MoSe2":
+            return 1.516
+        
+        if self._material == "RuCl3":
+            return 3.225
+        
+        if self._material == "PtSe2":
+            return 1.775
+        
+    @property 
+    def b(self):
+        if self._material == "WS2":
+            return 0
+        
+        if self._material == "MoS2":
+            return 0
+        
+        if self._material == "WSe2":
+            return 0
+        
+        if self._material == "MoSe2":
+            return 0
+        
+        if self._material == "RuCl3":
+            return 0
+        
+        if self._material == "PtSe2":
+            return 0
+
+    @property 
+    def db(self):
+        if self._material == "WS2":
+            return 0
+        
+        if self._material == "MoS2":
+            return 0
+        
+        if self._material == "WSe2":
+            return 0
+        
+        if self._material == "MoSe2":
+            return 0   
+
+        if self._material == "RuCl3":
+            return 0 
+    
+        if self._material == "PtSe2":
+            return 0                                                                                                                                                                                                                                                                                              
+        
+    @property 
+    def N_shift(self):
+        if self._material == "WS2":
+            return 11.279
+        
+        if self._material == "MoS2":
+            return 20.901
+        
+        if self._material == "WSe2":
+            return 15.985
+        
+        if self._material == "MoSe2":
+            return 23.293
+        
+        if self._material == "RuCl3":
+            return 14.663
+        
+        if self._material == "PtSe2":
+            return 21.884
+        
+    @property 
+    def dN_shift(self):
+        if self._material == "WS2":
+            return 0.654
+        
+        if self._material == "MoS2":
+            return 0.991
+        
+        if self._material == "WSe2":
+            return 4.131
+        
+        if self._material == "MoSe2":
+            return 2.641
+        
+        if self._material == "RuCl3":
+            return 1.216
+        
+        if self._material == "PtSe2":
+            return 2.563
+        
     
     
     def index(self, lamb:float, liste: list)->int:
@@ -433,17 +584,30 @@ class Material_Methode:
         return length
     
 
-    def thickness(self, exitonwavelength : float)->float:
-        """returns nanoflake layer number using new exponential metrics"""
+  def thickness(self, exitonwavelength : float)->float: 
         self._exitonwavelength = exitonwavelength
-        exitonenergy=self.energy_wavelength(self._exitonwavelength)
         
+        exitonenergy=self.energy_wavelength(self._exitonwavelength)       
         dif=exitonenergy-self.E_bulk
-        if self._material == "WS2":
-            return 0.88 + 2.311998E31*np.exp(-35.62*exitonenergy)
+               
+        if self._methode == "Ext":            
+            return (self.N_shift-self.b)*np.exp(self.R*(exitonenergy-self.E_bulk)) +self.b
                     
-        else:
+        elif self._methode == "Abs":
             if dif >0:
                 return abs(1+self.N0*np.log(((self.E_ML-self.E_bulk)/(dif))))     
             else: 
-                return 50
+                return "bulk like"
+            
+    def thicknesserror(self, exitonwavelength : float)->float: 
+        """calcutates the estimated thickness error, based on error propagation fit parameter standard deviations"""
+        
+        self._exitonwavelength = exitonwavelength 
+        exitonenergy=self.energy_wavelength(self._exitonwavelength)
+        
+        if self._methode == "Ext":      
+            dNvf = abs(np.exp(self.R*(exitonenergy-self.E_bulk)))*self.dN_shift + abs(1-np.exp((exitonenergy-self.E_bulk)*self.R))*self.db + abs((self.N_shift-self.b)*(exitonenergy-self.E_bulk)*np.exp((exitonenergy-self.E_bulk)*self.R))*self.dR
+            return dNvf
+        
+        elif self._methode == "Abs":
+            return "no error avaiable"
