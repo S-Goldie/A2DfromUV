@@ -384,6 +384,8 @@ final_energy_a = []
 final_energy_a_error = []
 final_thickness = []
 final_concentration = []
+final_Nv_error = []
+
 for m in np.arange(len(final_wavelength_a)):
     final_energy_a.append(objekt.energy_wavelength(final_wavelength_a[m]))
     final_energy_a_error.append(final_energy_a[m] * final_error_a[m] / final_wavelength_a[m])
@@ -391,12 +393,12 @@ for m in np.arange(len(final_wavelength_a)):
     if objekt.coeff == 0:
         final_concentration.append("Not Available")
     else:
-        final_concentration.append((spectra[m][objekt.index(objekt.normwavelength,wavelength)])/objekt.coeff)
-output_headings = str('Sample,Exciton Wavelength / nm,Error / nm,Exciton Energy / eV,Error / eV,<N>vf,Flake Length / nm,Smoothing Window,Smoothing Fraction,Concentration g/cm')
+        final_concentration.append((spectra[m][objekt.index(objekt.coeff[0],wavelength)])/objekt.coeff[1])
+output_headings = str('Sample,Exciton Wavelength / nm,Error / nm,Exciton Energy / eV,Error / eV,<N>vf,<N>vf error,Flake Length / nm,Smoothing Window,Smoothing Fraction,Concentration g/(L*cm)')
 try:
-    np.savetxt(Filename.removesuffix('.csv') + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, final_energy_a, final_energy_a_error, final_thickness, final_flake_length, final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
+    np.savetxt(Filename.removesuffix('.csv') + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, final_energy_a, final_energy_a_error, final_thickness,final_Nv_error, final_flake_length, final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
 except AttributeError:
-    np.savetxt(Filename[:-4] + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, final_energy_a, final_energy_a_error, final_thickness, final_flake_length, final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
+    np.savetxt(Filename[:-4] + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, final_energy_a, final_energy_a_error, final_thickness, final_Nv_error, final_flake_length, final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
 processed_headings = "Wavelength / nm,"
 for i in range(len(spectra)):
     processed_headings = processed_headings + str(labels[i]) + '-Smoothed,'
@@ -416,4 +418,3 @@ try:
     np.savetxt(Filename.removesuffix('.csv') + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
 except AttributeError:
     np.savetxt(Filename[:-4] + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
-print(final_concentration)
