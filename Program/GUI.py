@@ -9,7 +9,7 @@ import tkinter as tk
 
  
 material = ""
-methode = ""
+methode = "Abs"
 
 
 def function_name1():
@@ -82,18 +82,8 @@ btn6.pack()
 btn7 = tk.Button(root, text="PtSe2", command = function_name7,activebackground="green",bg = "lightgreen",height=2,font=12,width=18,relief="groove")
 btn7.pack()
 
-btn8 = tk.Button(root, text="Absorption", command = function_name8,activebackground="green",bg = "steelblue",height=2,font=12,width=18,relief="groove")
-btn8.pack()
-
-btn9 = tk.Button(root, text="Extiction", command = function_name9,activebackground="green",bg = "steelblue",height=2,font=12,width=18,relief="groove")
-btn9.pack()
-
 btn10 = tk.Button(root, text="Load file", command=function_quite,bg = "red",height=2,font=12,width=18,relief="groove")
 btn10.pack()
 root.mainloop()
 
 print("Material:\t",material)
-print("Method:\t\t",methode)
-
-
-
