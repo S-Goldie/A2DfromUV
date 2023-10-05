@@ -9,7 +9,7 @@ import tkinter as tk
 
  
 material = ""
-methode = "Abs"
+methode = "Ext"
 
 
 def function_name1():
