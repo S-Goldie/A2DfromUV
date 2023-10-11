@@ -365,10 +365,10 @@ class Material_Methode:
             return 555
         
         elif self._material == "PtSe2":
-            return 1149
+            return 255
 
         elif self._material == "InSe":
-            return 0
+            return 450
 
     ##parameters for concentration        
         
@@ -400,7 +400,7 @@ class Material_Methode:
             
         elif self._material == "NiPS3":
             if self._methode == "Ext":
-                return 0
+                return 383, 12.5
             elif self._methode == "Abs":
                 return 0
             
@@ -418,7 +418,7 @@ class Material_Methode:
 
         elif self._material == "InSe":
             if self._methode == "Ext":
-                return 0
+                return 341, 53
             elif self._methode == "Abs":
                 return 0
 #-----------------------Fit parameters for exponential form--------------------
