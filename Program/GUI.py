@@ -34,15 +34,15 @@ def function_name5():
 
 def function_name6():
     global material, methode
-    material = "FePS3"
+    material = "RuCl3"
 
 def function_name7():
     global material, methode
     material = "PtSe2"
-
+  
 def function_name8():
-    global material, methode 
-    methode = "Abs"
+    global material, methode
+    material = "InSe"
     
 def function_name9():
     global material, methode 
@@ -56,7 +56,7 @@ def function_quite():
 root = tk.Tk()
  
 # root window title and dimension
-root.title("Choose the material and the method of your spectra")
+root.title("Choose the material")
 root.geometry("300x550")
  
 
@@ -76,11 +76,14 @@ btn4.pack()
 btn5 = tk.Button(root, text="NiPS3", command = function_name5,activebackground="green",bg = "lightgreen",height=2,font=12,width=18,relief="groove")
 btn5.pack()
 
-btn6 = tk.Button(root, text="FePS3", command = function_name6,activebackground="green",bg = "lightgreen",height=2,font=12,width=18,relief="groove")
+btn6 = tk.Button(root, text="RuCl3", command = function_name6,activebackground="green",bg = "lightgreen",height=2,font=12,width=18,relief="groove")
 btn6.pack()
 
 btn7 = tk.Button(root, text="PtSe2", command = function_name7,activebackground="green",bg = "lightgreen",height=2,font=12,width=18,relief="groove")
 btn7.pack()
+
+btn8 = tk.Button(root, text="InSe", command = function_name8,activebackground="green",bg = "lightgreen",height=2,font=12,width=18,relief="groove")
+btn8.pack()
 
 btn10 = tk.Button(root, text="Load file", command=function_quite,bg = "red",height=2,font=12,width=18,relief="groove")
 btn10.pack()
