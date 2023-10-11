@@ -10,11 +10,6 @@ Constants use conventional units for discussing relative properties, e.g wavelen
 from scipy.constants import h,c,e
 import numpy as np
 
-
-face="#738595"                                         #facecolor for figures
-back="lightgrey"#"#363737"                             #backgroundcolor for figures
-
-
 class Material_Methode:
     def __init__(self, material: str , methode: str):
         self._material = material
@@ -245,9 +240,17 @@ class Material_Methode:
         
         elif self._material == "PtSe2":
             if self._methode == "Ext":
-                return 1.97
+                return 1.978
             elif self._methode == "Abs":
                 return 3.508
+
+        elif self._material == "InSe":
+            if self._methode == "Ext":
+                return 3.538
+
+
+
+        
             
     @property 
     def E_bulk(self):
@@ -292,7 +295,11 @@ class Material_Methode:
                 return 1.81
             elif self._methode == "Abs":
                 return 3.206
-            
+
+        elif self._material == "InSe":
+            if self._methode == "Ext":
+                return 3.101
+
     @property 
     def N0(self):
         if self._material == "WS2":
@@ -360,13 +367,16 @@ class Material_Methode:
         elif self._material == "PtSe2":
             return 1149
 
+        elif self._material == "InSe":
+            return 0
+
     ##parameters for concentration        
         
     @property 
     def coeff(self):
         if self._material == "WS2":
             if self._methode == "Ext":
-                return 235, 47.7 ###at 235
+                return 235, 47.7 
             elif self._methode == "Abs":
                 return 0
         
@@ -394,12 +404,6 @@ class Material_Methode:
             elif self._methode == "Abs":
                 return 0
             
-        elif self._material == "FePS3":
-            if self._methode == "Ext":
-                return 0
-            elif self._methode == "Abs":
-                return 0
-            
         elif self._material == "PtSe2":
             if self._methode == "Ext":
                 return 0
@@ -411,48 +415,66 @@ class Material_Methode:
                 return 500, 14.8
             elif self._methode == "Abs":
                 return 0
+
+        elif self._material == "InSe":
+            if self._methode == "Ext":
+                return 0
+            elif self._methode == "Abs":
+                return 0
 #-----------------------Fit parameters for exponential form--------------------
 #------------------------------------------------------------------------------
 
     @property 
     def R(self):
         if self._material == "WS2":
-            return -26.692
+            return -25.925
         
         if self._material == "MoS2":
             return -41.646
         
         if self._material == "WSe2":
-            return -31.084
+            return -28.898
         
         if self._material == "MoSe2":
-            return -40.242
+            return -41.858
         
         if self._material == "RuCl3":
             return -24.335
         
         if self._material == "PtSe2":
             return -12.281
+
+        if self._material == "InSe":
+            return -5.956
+
+        if self._material == "NiPS3":
+            return -3.139
     
     @property   
     def dR(self):
         if self._material == "WS2":
-            return 1.453
+            return 1.486
         
         if self._material == "MoS2":
             return 1.458
         
         if self._material == "WSe2":
-            return 5.710
+            return 4.650
         
         if self._material == "MoSe2":
-            return 2.929
+            return 3.657
         
         if self._material == "RuCl3":
             return 1.994
         
         if self._material == "PtSe2":
             return 0.867
+            
+        if self._material == "InSe":
+            return 0.147
+            
+        if self._material == "NiPS3":
+            return 1.007
         
     @property 
     def shift(self):
@@ -463,16 +485,22 @@ class Material_Methode:
             return 1.828
         
         if self._material == "WSe2":
-            return 1.650
+            return 1.610
         
         if self._material == "MoSe2":
             return 1.516
         
         if self._material == "RuCl3":
-            return 3.225
+            return 3.235
         
         if self._material == "PtSe2":
-            return 1.775
+            return 1.739
+            
+        if self._material == "InSe":
+            return 3.101
+
+        if self._material == "NiPS3":
+            return 3.139
         
     @property 
     def b(self):
@@ -494,6 +522,12 @@ class Material_Methode:
         if self._material == "PtSe2":
             return 0
 
+        if self._material == "InSe":
+            return 0
+        
+        if self._material == "NiPS3":
+            return 0
+
     @property 
     def db(self):
         if self._material == "WS2":
@@ -512,47 +546,65 @@ class Material_Methode:
             return 0 
     
         if self._material == "PtSe2":
-            return 0                                                                                                                                                                                                                                                                                              
+            return 0    
+
+        if self._material == "InSe":
+            return 0
+        
+        if self._material == "NiPS3":
+            return 0
         
     @property 
     def N_shift(self):
         if self._material == "WS2":
-            return 11.279
+            return 10.901
         
         if self._material == "MoS2":
             return 20.901
         
         if self._material == "WSe2":
-            return 15.985
+            return 14.192
         
         if self._material == "MoSe2":
-            return 23.293
+            return 26.346
         
         if self._material == "RuCl3":
-            return 14.663
+            return 11.496
         
         if self._material == "PtSe2":
-            return 21.884
+            return 34.052
+
+        if self._material == "InSe":
+            return 28.400
+        
+        if self._material == "NiPS3":
+            return 35.961
         
     @property 
     def dN_shift(self):
         if self._material == "WS2":
-            return 0.654
+            return 0.661
         
         if self._material == "MoS2":
             return 0.991
         
         if self._material == "WSe2":
-            return 4.131
+            return 2.660
         
         if self._material == "MoSe2":
-            return 2.641
+            return 3.599
         
         if self._material == "RuCl3":
-            return 1.216
+            return 0.748
         
         if self._material == "PtSe2":
-            return 2.563
+            return 4.998
+            
+        if self._material == "InSe":
+            return 0.658
+        
+        if self._material == "NiPS3":
+            return 3.278
         
     
     
