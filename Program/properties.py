@@ -163,9 +163,9 @@ class Material_Methode:
                 return -0.11
 
         elif self._material == "InSe":
-            if self._methode = "Ext":
+            if self._methode == "Ext":
                 return 20.53
-            if self._methode = "Abs":
+            if self._methode == "Abs":
                 return 13.86
             
     @property 
