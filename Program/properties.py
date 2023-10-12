@@ -65,7 +65,7 @@ class Material_Methode:
         elif self._material == "PtSe2":
             return 255
 
-        elif self.material == "InSe":
+        elif self._material == "InSe":
             return 450
         
     @property 
