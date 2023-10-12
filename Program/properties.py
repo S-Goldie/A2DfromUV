@@ -667,7 +667,7 @@ class Material_Methode:
         return length
     
 
-  def thickness(self, exitonwavelength : float)->float: 
+    def thickness(self, exitonwavelength : float)->float: 
         self._exitonwavelength = exitonwavelength
         
         exitonenergy=self.energy_wavelength(self._exitonwavelength)       
