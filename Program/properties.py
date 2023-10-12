@@ -38,6 +38,9 @@ class Material_Methode:
         
         elif self._material == "PtSe2":
             return 800
+
+        elif self._material == "InSe":
+            return 280
         
     @property 
     def R2(self):
@@ -61,6 +64,9 @@ class Material_Methode:
         
         elif self._material == "PtSe2":
             return 255
+
+        elif self.material == "InSe":
+            return 450
         
     @property 
     def A1(self):
@@ -105,6 +111,12 @@ class Material_Methode:
                 return 0.0134
             elif self._methode == "Abs":
                 return 0.0141
+
+        elif self._material == "InSe":
+            if self.methode == "Ext":
+                return -0.0269
+            elif self._methode == "Abs":
+                return 0.0163
             
     @property 
     def B1(self):
@@ -149,6 +161,12 @@ class Material_Methode:
                 return -0.06
             elif self._methode == "Abs":
                 return -0.11
+
+        elif self._material == "InSe":
+            if self._methode = "Ext":
+                return 20.53
+            if self._methode = "Abs":
+                return 13.86
             
     @property 
     def A2(self):
@@ -193,6 +211,12 @@ class Material_Methode:
                 return 0.0035
             elif self._methode == "Abs":
                 return 0.0042
+        
+        elif self._material == "InSe":
+            if self._methode == "Ext":
+                return 0.0163
+            elif self._methode == "Abs":
+                return 0.0081
     
     @property 
     def B2(self):
@@ -247,9 +271,8 @@ class Material_Methode:
         elif self._material == "InSe":
             if self._methode == "Ext":
                 return 3.538
-
-
-
+            elif self._methode == "Abs":
+                return 3.516
         
             
     @property 
@@ -299,6 +322,8 @@ class Material_Methode:
         elif self._material == "InSe":
             if self._methode == "Ext":
                 return 3.101
+            if self._methode == "Abs":
+                return 3.318
 
     @property 
     def N0(self):
@@ -343,6 +368,12 @@ class Material_Methode:
                 return 3.42
             elif self._methode == "Abs":
                 return 5.08
+
+        elif self._material == "InSe":
+            if self._methode == "Ext":
+                return 6.91
+            elif self._methode == "Abs":
+                return 5.61
        
     @property 
     def normwavelength(self):
