@@ -390,6 +390,7 @@ for m in np.arange(len(final_wavelength_a)):
     final_energy_a.append(objekt.energy_wavelength(final_wavelength_a[m]))
     final_energy_a_error.append(final_energy_a[m] * final_error_a[m] / final_wavelength_a[m])
     final_thickness.append(objekt.thickness(final_wavelength_a[m]))
+    final_Nv_error.append(objekt.thickness_error(final_energy_a[m],final_energy_a_error[m]))
     if objekt.coeff == 0:
         final_concentration.append("Not Available")
     else:
