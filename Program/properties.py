@@ -681,15 +681,19 @@ class Material_Methode:
                 return abs(1+self.N0*np.log(((self.E_ML-self.E_bulk)/(dif))))     
             else: 
                 return "bulk like"
-            
-    def thicknesserror(self, exitonwavelength : float)->float: 
+
+
+    def thickness_error(self, exciton_energy:float, exciton_error:float)->float: 
         """calcutates the estimated thickness error, based on error propagation fit parameter standard deviations"""
         
-        self._exitonwavelength = exitonwavelength 
-        exitonenergy=self.energy_wavelength(self._exitonwavelength)
+        self._exitonenergy = exciton_energy
+        self._excitonerror = exciton_error
         
         if self._methode == "Ext":      
-            dNvf = abs(np.exp(self.R*(exitonenergy-self.E_bulk)))*self.dN_shift + abs(1-np.exp((exitonenergy-self.E_bulk)*self.R))*self.db + abs((self.N_shift-self.b)*(exitonenergy-self.E_bulk)*np.exp((exitonenergy-self.E_bulk)*self.R))*self.dR
+            dNvf = (abs(np.exp(self.R*(self._exitonenergy-self.E_bulk)))*self.dN_shift 
+                + abs(self.N_shift*(self._exitonenergy-self.E_bulk)*np.exp((self._exitonenergy-self.E_bulk)*self.R))*self.dR 
+                + abs(self.N_shift*self.R*np.exp(self.R*(self._exitonenergy-self.E_bulk)))*self._excitonerror)
+            
             return dNvf
         
         elif self._methode == "Abs":
