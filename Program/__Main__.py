@@ -386,6 +386,15 @@ final_thickness = []
 final_concentration = []
 final_Nv_error = []
 
+neededmaxwavelength=wavelength[lf_lim+10]
+neededminwavelength=min([objekt.R1,objekt.R2,objekt.normwavelength,objekt.coeff[0]])
+minwavelength = min(wavelength)
+maxwavelength = max(wavelength)
+if maxwavelength < neededmaxwavelength:
+    print("\x1b[1;31mCaution! Spectrum energy range does not fit to resonance energy")
+if minwavelength > neededminwavelength:
+    print("\x1b[1;31mCaution! Spectrum energy range does not fit to requiered energy for concentration or flake length determination")
+    
 for m in np.arange(len(final_wavelength_a)):
     final_energy_a.append(objekt.energy_wavelength(final_wavelength_a[m]))
     final_energy_a_error.append(final_energy_a[m] * final_error_a[m] / final_wavelength_a[m])
