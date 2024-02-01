@@ -419,12 +419,12 @@ try:
 except:
     print('Upgrade to Python3.9 for string cleaning. \n The output file may contain additional empty columns')       #Python3.9 required for easy edit of final comma only
 
-
-
-    
-#Need length and concentration calculations including!!!
 processed_output = [list(n) for n in zip(*processed_spectra)]
 try:
     np.savetxt(Filename.removesuffix('.csv') + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
 except AttributeError:
     np.savetxt(Filename[:-4] + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
+
+#User input to prevent instant program termination. Designed to keep graphical display window open.
+print('Data Saved')
+input('Press Enter to exit...')
