@@ -205,81 +205,116 @@ processed_spectra = np.zeros([int(1+2*spectra.shape[0]), int(len(wavelength))])#
 processed_spectra[0] = wavelength
 """----------------------------------------------------------------------------"""
 
+"""-------------Confirm spectra range is valid---------------------------------"""
+if max(wavelength) < (objekt.wavelength_energy(objekt.E_bulk)+10):
+    print("\x1b[1;31mCaution! Spectrum energy range does not fit to resonance energy")
+    energy_flag = False
+else:
+    energy_flag = True
 
-for i in range(spectra.shape[0]):                                              #Iterate over each spectra in turn for analysis
-    print("Processing spectrum:", i+1)
-    diff_min = []
-    rightzero = []
-    leftzero = []
-    local_window_list = []
-    local_fraction_list = []
-    
-    for j in range(0,subset_size):                                             #Iterate over the sub-set to produce enough data points for varation analysis
-        data_point_window = (j+1.5)*2                                          #j is an index, here we increase smoothing window length by 2, starting at 3 points when j=0
-        local_window_list.append(data_point_window)
-        local_fraction_list.append(data_point_window/len(spectra[i]))
-        smoothed = lowess(spectra[i], wavelength, frac=(data_point_window/len(spectra[i])),it=0,return_sorted=False)
-        lw_filtered[i,j]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])
-        sec_diff[i,j] = np.gradient(np.gradient(lw_filtered[i,j], wavelength),wavelength)
-        interpol= interpolate.interp1d(wavelength[lf_lim:rt_lim], sec_diff[i,j][lf_lim:rt_lim],kind="cubic")
-        interpol_array[i,j] = interpol(x_new)
+neededminwavelength=min([objekt.R1,objekt.R2,objekt.normwavelength,objekt.coeff[0]])
+minwavelength = min(wavelength)
+if minwavelength > neededminwavelength:
+    print("\x1b[1;31mCaution! Spectrum energy range does not fit to requiered energy for concentration or flake length determination")
+    length_flag = False
+else:
+    length_flag = True
+"""----------------------------------------------------------------------------"""
+
+if energy_flag == True:
+    for i in range(spectra.shape[0]):                                              #Iterate over each spectra in turn for analysis
+        print("Processing spectrum:", i+1)
+        diff_min = []
+        rightzero = []
+        leftzero = []
+        local_window_list = []
+        local_fraction_list = []
         
-        rightzero.append(right_intercept(interpol_array[i,j]))  #use functions to find the left and right intercept - currently causes error for some samples wth a wide possible peak range because the initial centre can be positive to start.
-        leftzero.append(left_intercept(interpol_array[i,j]))
-        diff_min.append(np.argmin(interpol_array[i,j,rightzero[j]:leftzero[j]]) + rightzero[j])
-        
-    #First smoothing points calculated. At least the initial sub-set must be calculated for the analysis
-    #at this point j is equal to subset size. Analysis to start with the first point, and extra smoothing and differntial spectra are only calculated as needed
-    convergence_flag = False
-    k = 0
-    plottable_right_smoothness = []
-    plottable_left_smoothness = []
-    plottable_center_smoothness = []
-        
-    try:
-        while convergence_flag != True:
-            if k == 1000:
-                print("Caution: " + labels[i] + " could not be analysed.")
-                final_wavelength_a.append(5)
-                final_error_a.append(100)
-                final_window_list.append(local_window_list[k-1])
-                final_fraction_list.append(local_fraction_list[k-1])
-                break
-            right_smoothness = correlation_subset(k, rightzero)
-            plottable_right_smoothness.append(right_smoothness)
-            left_smoothness = correlation_subset(k, leftzero)
-            plottable_left_smoothness.append(left_smoothness)
-            center_smoothness = correlation_subset(k, diff_min)
-            plottable_center_smoothness.append(center_smoothness)
-            if (x_new[rightzero[k]] - x_new[leftzero[k]]) > 15:     #a peak narrower than 15nm is assumed to be noise crossing the x-axis
-                if x_new[rightzero[k]] - x_new[diff_min[k]] > 5 and x_new[diff_min[k]] - x_new[leftzero[k]] > 5 :      #the intercepts must be either side and ruther than 5nm from the minimal point. (Using the minimum point like this can cause errors with spectra that have discontinuities at localised points due to source or detector changes)
-                    if right_smoothness <= 0.025 and left_smoothness <= 0.025 and center_smoothness <= 0.025:         #all metrics must show less than 2.5% variation within a sub-set size defined from the data interval.
-                        areas = []
-                        focussed_wavelength = []
-                        for x in np.arange(start=rightzero[k],stop=leftzero[k],dtype=int,step=1):
-                            areas.append(areamin(x, interpol_array[i,k], rightzero[k], leftzero[k]))
-                        center = x_new[np.argmin(areas)+rightzero[k]]
-                        
-                        noise_list = np.gradient(sec_diff[i,k][objekt.index(x_new[leftzero[k]],wavelength):rt_lim])      #calculate the gradient as an approximation of the noise in the peak region, to the left of the x-intercept of the peak
-                        np.append(noise_list, np.gradient(sec_diff[i,k][lf_lim:objekt.index(x_new[rightzero[k]],wavelength)]))
-                        noise = np.mean(np.absolute(noise_list))
-                        signal = np.min(sec_diff[i,k][objekt.index(x_new[rightzero[k]],wavelength):objekt.index(x_new[leftzero[k]],wavelength)])
-                        sn = np.abs(signal / noise)
-                        #print('Signal to Noise: {:.2f}'.format(sn))
-                        five_percent = ((max(areas)-min(areas))*0.05)+min(areas)
-                        negative_error = x_new[rightzero[k] + find_nearest(areas[np.argmin(areas):],five_percent) + np.argmin(areas)]
-                        positive_error = x_new[rightzero[k] + find_nearest(areas[:np.argmin(areas)],five_percent)]
-                        final_wavelength_a.append(center)        #this is being calculated only for each smoothing window, more efficient.  
-                        final_error_a.append(max(positive_error-center,center-negative_error) * (1+(1/sn)))
-                        #print('5% Peak Minimum Error: {:.2f}'.format(max(positive_error-center,center-negative_error)))
-                        #print('Combined Error: {:.2f}'.format(final_error_a[i]))
-                        
-                        final_window_list.append(local_window_list[k])
-                        final_fraction_list.append(local_fraction_list[k])
-                        final_flake_length.append(objekt.length(lw_filtered[i,k,:], wavelength))
-                        processed_spectra[1+i] = lw_filtered[i,k,:]
-                        processed_spectra[1+len(spectra)+i] = sec_diff[i,k,:]
-                        convergence_flag = True
+        for j in range(0,subset_size):                                             #Iterate over the sub-set to produce enough data points for varation analysis
+            data_point_window = (j+1.5)*2                                          #j is an index, here we increase smoothing window length by 2, starting at 3 points when j=0
+            local_window_list.append(data_point_window)
+            local_fraction_list.append(data_point_window/len(spectra[i]))
+            smoothed = lowess(spectra[i], wavelength, frac=(data_point_window/len(spectra[i])),it=0,return_sorted=False)
+            lw_filtered[i,j]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])
+            sec_diff[i,j] = np.gradient(np.gradient(lw_filtered[i,j], wavelength),wavelength)
+            interpol= interpolate.interp1d(wavelength[lf_lim:rt_lim], sec_diff[i,j][lf_lim:rt_lim],kind="cubic")
+            interpol_array[i,j] = interpol(x_new)
+            
+            rightzero.append(right_intercept(interpol_array[i,j]))  #use functions to find the left and right intercept - currently causes error for some samples wth a wide possible peak range because the initial centre can be positive to start.
+            leftzero.append(left_intercept(interpol_array[i,j]))
+            diff_min.append(np.argmin(interpol_array[i,j,rightzero[j]:leftzero[j]]) + rightzero[j])
+            
+        #First smoothing points calculated. At least the initial sub-set must be calculated for the analysis
+        #at this point j is equal to subset size. Analysis to start with the first point, and extra smoothing and differntial spectra are only calculated as needed
+        convergence_flag = False
+        k = 0
+        plottable_right_smoothness = []
+        plottable_left_smoothness = []
+        plottable_center_smoothness = []
+            
+        try:
+            while convergence_flag != True:
+                if k == 1000:
+                    print("Caution: " + labels[i] + " could not be analysed.")
+                    final_wavelength_a.append(5)
+                    final_error_a.append(100)
+                    final_window_list.append(local_window_list[k-1])
+                    final_fraction_list.append(local_fraction_list[k-1])
+                    break
+                right_smoothness = correlation_subset(k, rightzero)
+                plottable_right_smoothness.append(right_smoothness)
+                left_smoothness = correlation_subset(k, leftzero)
+                plottable_left_smoothness.append(left_smoothness)
+                center_smoothness = correlation_subset(k, diff_min)
+                plottable_center_smoothness.append(center_smoothness)
+                if (x_new[rightzero[k]] - x_new[leftzero[k]]) > 15:     #a peak narrower than 15nm is assumed to be noise crossing the x-axis
+                    if x_new[rightzero[k]] - x_new[diff_min[k]] > 5 and x_new[diff_min[k]] - x_new[leftzero[k]] > 5 :      #the intercepts must be either side and ruther than 5nm from the minimal point. (Using the minimum point like this can cause errors with spectra that have discontinuities at localised points due to source or detector changes)
+                        if right_smoothness <= 0.025 and left_smoothness <= 0.025 and center_smoothness <= 0.025:         #all metrics must show less than 2.5% variation within a sub-set size defined from the data interval.
+                            areas = []
+                            focussed_wavelength = []
+                            for x in np.arange(start=rightzero[k],stop=leftzero[k],dtype=int,step=1):
+                                areas.append(areamin(x, interpol_array[i,k], rightzero[k], leftzero[k]))
+                            center = x_new[np.argmin(areas)+rightzero[k]]
+                            
+                            noise_list = np.gradient(sec_diff[i,k][objekt.index(x_new[leftzero[k]],wavelength):rt_lim])      #calculate the gradient as an approximation of the noise in the peak region, to the left of the x-intercept of the peak
+                            np.append(noise_list, np.gradient(sec_diff[i,k][lf_lim:objekt.index(x_new[rightzero[k]],wavelength)]))
+                            noise = np.mean(np.absolute(noise_list))
+                            signal = np.min(sec_diff[i,k][objekt.index(x_new[rightzero[k]],wavelength):objekt.index(x_new[leftzero[k]],wavelength)])
+                            sn = np.abs(signal / noise)
+                            #print('Signal to Noise: {:.2f}'.format(sn))
+                            five_percent = ((max(areas)-min(areas))*0.05)+min(areas)
+                            negative_error = x_new[rightzero[k] + find_nearest(areas[np.argmin(areas):],five_percent) + np.argmin(areas)]
+                            positive_error = x_new[rightzero[k] + find_nearest(areas[:np.argmin(areas)],five_percent)]
+                            final_wavelength_a.append(center)        #this is being calculated only for each smoothing window, more efficient.  
+                            final_error_a.append(max(positive_error-center,center-negative_error) * (1+(1/sn)))
+                            #print('5% Peak Minimum Error: {:.2f}'.format(max(positive_error-center,center-negative_error)))
+                            #print('Combined Error: {:.2f}'.format(final_error_a[i]))
+                            
+                            final_window_list.append(local_window_list[k])
+                            final_fraction_list.append(local_fraction_list[k])
+                            if length_flag == True:
+                                final_flake_length.append(objekt.length(lw_filtered[i,k,:], wavelength))
+                            elif length_flag == False:
+                                final_flake_length.append('Insufficient Data')
+                            processed_spectra[1+i] = lw_filtered[i,k,:]
+                            processed_spectra[1+len(spectra)+i] = sec_diff[i,k,:]
+                            convergence_flag = True
+                        else:
+                            l = k + subset_size
+                            data_point_window = (l+1.5)*2
+                            local_window_list.append(data_point_window)
+                            local_fraction_list.append(data_point_window/len(spectra[i]))
+                            smoothed = lowess(spectra[i], wavelength, frac=(data_point_window/len(spectra[i])),it=0,return_sorted=False)
+                            lw_filtered[i,l]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])
+                            sec_diff[i,l] = np.gradient(np.gradient(lw_filtered[i,l], wavelength),wavelength)
+                            interpol= interpolate.interp1d(wavelength[lf_lim:rt_lim], sec_diff[i,l][lf_lim:rt_lim],kind="cubic")
+                            interpol_array[i,l] = interpol(x_new)
+                            
+                            rightzero.append(right_intercept(interpol_array[i,l]))
+                            leftzero.append(left_intercept(interpol_array[i,l]))
+                            diff_min.append(np.argmin(interpol_array[i,l,rightzero[l]:leftzero[l]]) + rightzero[l])
+                            k += 1
+                            
                     else:
                         l = k + subset_size
                         data_point_window = (l+1.5)*2
@@ -295,7 +330,6 @@ for i in range(spectra.shape[0]):                                              #
                         leftzero.append(left_intercept(interpol_array[i,l]))
                         diff_min.append(np.argmin(interpol_array[i,l,rightzero[l]:leftzero[l]]) + rightzero[l])
                         k += 1
-                        
                 else:
                     l = k + subset_size
                     data_point_window = (l+1.5)*2
@@ -311,113 +345,87 @@ for i in range(spectra.shape[0]):                                              #
                     leftzero.append(left_intercept(interpol_array[i,l]))
                     diff_min.append(np.argmin(interpol_array[i,l,rightzero[l]:leftzero[l]]) + rightzero[l])
                     k += 1
-            else:
-                l = k + subset_size
-                data_point_window = (l+1.5)*2
-                local_window_list.append(data_point_window)
-                local_fraction_list.append(data_point_window/len(spectra[i]))
-                smoothed = lowess(spectra[i], wavelength, frac=(data_point_window/len(spectra[i])),it=0,return_sorted=False)
-                lw_filtered[i,l]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])
-                sec_diff[i,l] = np.gradient(np.gradient(lw_filtered[i,l], wavelength),wavelength)
-                interpol= interpolate.interp1d(wavelength[lf_lim:rt_lim], sec_diff[i,l][lf_lim:rt_lim],kind="cubic")
-                interpol_array[i,l] = interpol(x_new)
-                
-                rightzero.append(right_intercept(interpol_array[i,l]))
-                leftzero.append(left_intercept(interpol_array[i,l]))
-                diff_min.append(np.argmin(interpol_array[i,l,rightzero[l]:leftzero[l]]) + rightzero[l])
-                k += 1
+        
+        except ValueError:
+            final_wavelength_a.append(50) 
+            final_error_a.append(100)
+            final_window_list.append(local_window_list[k])
+            final_fraction_list.append(local_fraction_list[k])
+            final_flake_length.append(0)
     
-    except ValueError:
-        final_wavelength_a.append(50) 
-        final_error_a.append(100)
-        final_window_list.append(local_window_list[k])
-        final_fraction_list.append(local_fraction_list[k])
-        final_flake_length.append(0)
-
-
-#%% At this point, smooth parameters have been identified and recorded in small lists denoted final.
-#Intermediate analysis of smoothing and differentation are available in 3D arrays [i,j,k] where i is the spectra number, j the smoothing index and k the wavelength index.
-#Plot the final smoothed spectra and second derivative with the A-exciton position highlighted.
-
-plt.figure("Spectral_Analyis Smoothness",figsize=(10,5))
-
-for i in range(len(spectra)):
-    plt.subplot(1,2,1)
-    plt.title('Spectrum', fontsize = 14)
     
-    plt.plot(wavelength, lw_filtered[i,int((final_window_list[i]/2)-1.5),:], color=colors[i], label=labels[i])
-    if final_wavelength_a[i] != 0:
-        plt.axvline(final_wavelength_a[i], color=colors[i])
-    plt.xlabel("$\lambda / nm$",fontsize=14)
-    plt.ylabel("$Ext$",fontsize=14)
-    plt.xlim(wavelength[-1],wavelength[0])   
-    plt.legend()
+    #%% At this point, smooth parameters have been identified and recorded in small lists denoted final.
+    #Intermediate analysis of smoothing and differentation are available in 3D arrays [i,j,k] where i is the spectra number, j the smoothing index and k the wavelength index.
+    #Plot the final smoothed spectra and second derivative with the A-exciton position highlighted.
     
-    plt.subplot(1,2,2)
-    plt.title('Differentiated',fontsize=14)
+    plt.figure("Spectral_Analyis Smoothness",figsize=(10,5))
     
-    #plt.scatter(wavelength[lf_lim:rt_lim], sec_diff[i,int((final_window_list[i]/2)-1.5),lf_lim:rt_lim],color=colors[i], marker='o', s=6, label=(labels[i]))
-    plt.plot(x_new,interpol_array[i,int((final_window_list[i]/2)-1.5),:],color=colors[i], linestyle='-', label=("$\lambda_A$: {:.2f} nm".format(final_wavelength_a[i])),linewidth=2,alpha=0.4)
+    for i in range(len(spectra)):
+        plt.subplot(1,2,1)
+        plt.title('Spectrum', fontsize = 14)
+        
+        plt.plot(wavelength, lw_filtered[i,int((final_window_list[i]/2)-1.5),:], color=colors[i], label=labels[i])
+        if final_wavelength_a[i] != 0:
+            plt.axvline(final_wavelength_a[i], color=colors[i])
+        plt.xlabel("$\lambda / nm$",fontsize=14)
+        plt.ylabel("$Ext$",fontsize=14)
+        plt.xlim(wavelength[-1],wavelength[0])   
+        plt.legend()
+        
+        plt.subplot(1,2,2)
+        plt.title('Differentiated',fontsize=14)
+        
+        #plt.scatter(wavelength[lf_lim:rt_lim], sec_diff[i,int((final_window_list[i]/2)-1.5),lf_lim:rt_lim],color=colors[i], marker='o', s=6, label=(labels[i]))
+        plt.plot(x_new,interpol_array[i,int((final_window_list[i]/2)-1.5),:],color=colors[i], linestyle='-', label=("$\lambda_A$: {:.2f} nm".format(final_wavelength_a[i])),linewidth=2,alpha=0.4)
+        
+        if final_wavelength_a[i] != 0:
+            plt.axvline(final_wavelength_a[i],color=colors[i])
+        plt.xlim(wavelength[rt_lim+5],wavelength[lf_lim-5])
+        plt.xlabel("$\lambda / nm$",fontsize=14)
+        plt.ylabel("$\\frac{\partial^2 Ext.}{\partial \lambda^2}$",fontsize=14)
+        plt.axhline(0,color="k")
+        plt.legend()
     
-    if final_wavelength_a[i] != 0:
-        plt.axvline(final_wavelength_a[i],color=colors[i])
-    plt.xlim(wavelength[rt_lim+5],wavelength[lf_lim-5])
-    plt.xlabel("$\lambda / nm$",fontsize=14)
-    plt.ylabel("$\\frac{\partial^2 Ext.}{\partial \lambda^2}$",fontsize=14)
-    plt.axhline(0,color="k")
-    plt.legend()
-
-
-names = []
-for i in range(len(spectra)):
-    names.append(labels[i])
-
-
-final_energy_a = []
-final_energy_a_error = []
-final_thickness = []
-final_concentration = []
-final_Nv_error = []
-
-neededmaxwavelength=wavelength[lf_lim+10]
-neededminwavelength=min([objekt.R1,objekt.R2,objekt.normwavelength,objekt.coeff[0]])
-minwavelength = min(wavelength)
-maxwavelength = max(wavelength)
-if maxwavelength < neededmaxwavelength:
-    print("\x1b[1;31mCaution! Spectrum energy range does not fit to resonance energy")
-if minwavelength > neededminwavelength:
-    print("\x1b[1;31mCaution! Spectrum energy range does not fit to requiered energy for concentration or flake length determination")
     
-for m in np.arange(len(final_wavelength_a)):
-    final_energy_a.append(objekt.energy_wavelength(final_wavelength_a[m]))
-    final_energy_a_error.append(final_energy_a[m] * final_error_a[m] / final_wavelength_a[m])
-    final_thickness.append(objekt.thickness(final_wavelength_a[m]))
-    final_Nv_error.append(objekt.thickness_error(final_energy_a[m],final_energy_a_error[m]))
-    if objekt.coeff == 0:
-        final_concentration.append("Not Available")
-    else:
-        final_concentration.append((spectra[m][objekt.index(objekt.coeff[0],wavelength)])/objekt.coeff[1])
-output_headings = str('Sample,Exciton Wavelength / nm,Error / nm,Exciton Energy / eV,Error / eV,<N>vf,<N>vf error,Flake Length / nm,Smoothing Window,Smoothing Fraction,Concentration g/(L*cm)')
-try:
-    np.savetxt(Filename.removesuffix('.csv') + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, final_energy_a, final_energy_a_error, final_thickness,final_Nv_error, final_flake_length, final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
-except AttributeError:
-    np.savetxt(Filename[:-4] + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, final_energy_a, final_energy_a_error, final_thickness, final_Nv_error, final_flake_length, final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
-processed_headings = "Wavelength / nm,"
-for i in range(len(spectra)):
-    processed_headings = processed_headings + str(labels[i]) + '-Smoothed,'
-for i in range(len(spectra)):
-    processed_headings = processed_headings + str(labels[i]) + '-Differentiated,'
-try:
-    processed_headings.removesuffix(',')        #cleans format by removing final comma at end of string
-except:
-    print('Upgrade to Python3.9 for string cleaning. \n The output file may contain additional empty columns')
-
-processed_output = [list(n) for n in zip(*processed_spectra)]
-try:
-    np.savetxt(Filename.removesuffix('.csv') + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
-except AttributeError:
-    np.savetxt(Filename[:-4] + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
-
-#User input to prevent instant program termination. Designed to keep graphical display window open.
-print('Data Saved')
-input('Press Enter to exit...')
+    names = []
+    for i in range(len(spectra)):
+        names.append(labels[i])
+    
+    
+    final_energy_a = []
+    final_energy_a_error = []
+    final_thickness = []
+    final_concentration = []
+    final_Nv_error = []
+     
+    for m in np.arange(len(final_wavelength_a)):
+        final_energy_a.append(objekt.energy_wavelength(final_wavelength_a[m]))
+        final_energy_a_error.append(final_energy_a[m] * final_error_a[m] / final_wavelength_a[m])
+        final_thickness.append(objekt.thickness(final_wavelength_a[m]))
+        final_Nv_error.append(objekt.thickness_error(final_energy_a[m],final_energy_a_error[m]))
+        if objekt.coeff == 0:
+            final_concentration.append("Not Available")
+        elif length_flag == True:
+            final_concentration.append((spectra[m][objekt.index(objekt.coeff[0],wavelength)])/objekt.coeff[1])
+        elif length_flag == False:
+            final_concentration.append('Insufficient Data')
+    output_headings = str('Sample,Exciton Wavelength / nm,Error / nm,Exciton Energy / eV,Error / eV,<N>vf,<N>vf error,Flake Length / nm,Smoothing Window,Smoothing Fraction,Concentration g/(L*cm)')
+    try:
+        np.savetxt(Filename.removesuffix('.csv') + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, final_energy_a, final_energy_a_error, final_thickness,final_Nv_error, final_flake_length, final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
+    except AttributeError:
+        np.savetxt(Filename[:-4] + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, final_energy_a, final_energy_a_error, final_thickness, final_Nv_error, final_flake_length, final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
+    processed_headings = "Wavelength / nm,"
+    for i in range(len(spectra)):
+        processed_headings = processed_headings + str(labels[i]) + '-Smoothed,'
+    for i in range(len(spectra)):
+        processed_headings = processed_headings + str(labels[i]) + '-Differentiated,'
+    try:
+        processed_headings.removesuffix(',')        #cleans format by removing final comma at end of string
+    except:
+        print('Upgrade to Python3.9 for string cleaning. \n The output file may contain additional empty columns')
+    
+    processed_output = [list(n) for n in zip(*processed_spectra)]
+    try:
+        np.savetxt(Filename.removesuffix('.csv') + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
+    except AttributeError:
+        np.savetxt(Filename[:-4] + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
