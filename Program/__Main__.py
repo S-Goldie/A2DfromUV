@@ -28,60 +28,60 @@ from GUI import material,methode
 
 """------Selection of data and method, loading of data into numpy array -------"""
 Tk().withdraw()
-Filename = askopenfilename()                                                   #show an "Open" dialog box and return the path to the selected file      
+Filename = askopenfilename()    
 
-short_name = Filename[Filename.rfind('/')+1:Filename.find('.csv')]             #extract the filename without path for saving files
-print("File loaded:", short_name)                                              #print the loaded file name 
+short_name = Filename[Filename.rfind('/')+1:Filename.find('.csv')]
+print("File loaded:", short_name)
 #%%
 
-objekt=Material_Methode(material, methode)                                     #Accesses the properties class and creates an object with the material and method-specific parameters. 
+objekt=Material_Methode(material, methode) 
 
 try:
-    data = np.genfromtxt(Filename,                                             #load data skip headlines
+    data = np.genfromtxt(Filename,
                  skip_header=2,delimiter=",")
 except ValueError:
-    data = np.genfromtxt(Filename,                                             #load data skip headlines
+    data = np.genfromtxt(Filename,
                  skip_header=2,delimiter=",",invalid_raise=False)
     print("Non-numerical values detected in csv file. Skipped parameter lines.")   
 """----------------------------------------------------------------------------"""
 
 
 """---------------------Preparation and sorting of the data--------------------"""
-wavelength=data[:,0]                                                           #array contains the wavelengths       
-spectra=np.zeros([data.shape[1],data.shape[0]])                                #helparray for spectra data
+wavelength=data[:,0]       
+spectra=np.zeros([data.shape[1],data.shape[0]])
 
 
-count0=0                                                                       #Helpvariable for counting empty lines
-data_space = abs(np.mean(wavelength[1:]-wavelength[:-1]))                      #Calculate dataspacing  
+count0=0
+data_space = abs(np.mean(wavelength[1:]-wavelength[:-1]))  
 
-for i in range(data.shape[1]):                                                 #iterate through columns
-    if sum(data[:,i])/len(data[:,i]) <= 200:                                   #test iterative if dataarray column contains extinction values or wavelenghts
-        for j in range (data.shape[0]):                                        #if the column is a wavelenghtcolumn iteration through lines
-            spectra[i][j] = data[j,i]                                          #write exctinction data in lines of spectra matrix
-    if sum(spectra[i])==0.0:                                                   #count how many just zero lines are left in spectra matrix          
+for i in range(data.shape[1]):
+    if sum(data[:,i])/len(data[:,i]) <= 200:
+        for j in range (data.shape[0]):
+            spectra[i][j] = data[j,i]
+    if sum(spectra[i])==0.0:         
         count0+=1
            
 try:
-    for i in range(len(spectra)-count0+1):                                     #delete empty lines in spectra-array
+    for i in range(len(spectra)-count0+1):
         if sum(spectra[i])== 0.0:
             spectra = np.delete(spectra,(i), axis = 0) 
 except IndexError:
-    for i in range(len(spectra)-count0):                                       #delete empty lists in spectra-array
+    for i in range(len(spectra)-count0): 
         if sum(spectra[i])== 0.0:
             spectra = np.delete(spectra,(i), axis = 0)
 """----------------------------------------------------------------------------"""
 
 
 """-----create color gradient in dependence to subset size and load labels-----"""
-colors=[]                                                                      #create colorlist
+colors=[]
 for i in range(1,spectra.shape[0]+1):
-    colors.append([1-i/(spectra.shape[0]),0.1,i/(spectra.shape[0]),0.7])       #fill colorlist with RGB colorcode
+    colors.append([1-i/(spectra.shape[0]),0.1,i/(spectra.shape[0]),0.7])
 
 
-labels = np.loadtxt(Filename,                                                  #load header as str for labeling
+labels = np.loadtxt(Filename,
                  delimiter=",",dtype=str,max_rows=1)
 
-for i in range(len(labels)-count0):                                            #delete empty labels
+for i in range(len(labels)-count0):
     if labels[i]=="":
         labels = np.delete(labels,(i), axis = 0) 
 """----------------------------------------------------------------------------"""
@@ -112,8 +112,6 @@ if rt_lim < 0:                                                                 #
 
 
 """------------------------Functions-------------------------------------------"""
-#Smoothness parameter. Possibility of using the relative difference between adjacent points as per paper, or calculating the correlation coefficient of local points
-#define j at the far end of the sub-set
 def correlation_subset(j, y):
     """
     Calculates a subset size in which the variation after smoothing is calculated
@@ -124,7 +122,6 @@ def correlation_subset(j, y):
     else:
         return(float(0.0))
 
-#Minimisation of the integral area either side of the central value. By minimising the difference, the center of mass of the peak can be calculated.
 def areamin (mini, interpollist, interpolright, interpolleft):
     """
     Minimisation of the integral area either side of the central value. By minimising the difference, the center of mass of the peak can be calculated
@@ -145,10 +142,6 @@ def round_up_to_odd(f):
     The function  takes a floating-point number f as input and returns the nearest odd integer that is greater than or equal to f.
     """
     return int(np.ceil(f) // 2 * 2 + 1)
-
-#the intercept finders need to be improved to handle materials with wider possible exciton energy windows that result in "starting point" is above zero. Possibly go back to using minimum as the starting point? Any spectra that has a discontinuity will be a problem regardless.
-#iterate along the x-axis from a central point until the x-axis intercept is found
-#alternative intercept, use the bulk and monolayer wavelengths as limits. Inside those limits, find the minimum and use that as a value for the initial peak center for axis intercept identification.
 
 def right_intercept(interpollist):
     """ This function finds the right crossing point of the x-axis and returns the index"""
@@ -215,7 +208,7 @@ processed_spectra[0] = wavelength
 
 for i in range(spectra.shape[0]):                                              #Iterate over each spectra in turn for analysis
     print("Processing spectrum:", i+1)
-    diff_min = []                                                              #empty lists to contain metrics for different smoothing parameters
+    diff_min = []
     rightzero = []
     leftzero = []
     local_window_list = []
@@ -223,17 +216,17 @@ for i in range(spectra.shape[0]):                                              #
     
     for j in range(0,subset_size):                                             #Iterate over the sub-set to produce enough data points for varation analysis
         data_point_window = (j+1.5)*2                                          #j is an index, here we increase smoothing window length by 2, starting at 3 points when j=0
-        local_window_list.append(data_point_window)                            #fill the list with the data points window
-        local_fraction_list.append(data_point_window/len(spectra[i]))          #fill the list with the used windowlenghts for lowess smoothing
-        smoothed = lowess(spectra[i], wavelength, frac=(data_point_window/len(spectra[i])),it=0,return_sorted=False)    #smooth spectra
-        lw_filtered[i,j]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])                          #normalized smoothed spectra
-        sec_diff[i,j] = np.gradient(np.gradient(lw_filtered[i,j], wavelength),wavelength)                               #second derivative of normalized smoothed spectra
-        interpol= interpolate.interp1d(wavelength[lf_lim:rt_lim], sec_diff[i,j][lf_lim:rt_lim],kind="cubic")            #interpolate data in A exciton region
-        interpol_array[i,j] = interpol(x_new)                                                                           #store interpolated data in array
+        local_window_list.append(data_point_window)
+        local_fraction_list.append(data_point_window/len(spectra[i]))
+        smoothed = lowess(spectra[i], wavelength, frac=(data_point_window/len(spectra[i])),it=0,return_sorted=False)
+        lw_filtered[i,j]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])
+        sec_diff[i,j] = np.gradient(np.gradient(lw_filtered[i,j], wavelength),wavelength)
+        interpol= interpolate.interp1d(wavelength[lf_lim:rt_lim], sec_diff[i,j][lf_lim:rt_lim],kind="cubic")
+        interpol_array[i,j] = interpol(x_new)
         
         rightzero.append(right_intercept(interpol_array[i,j]))  #use functions to find the left and right intercept - currently causes error for some samples wth a wide possible peak range because the initial centre can be positive to start.
         leftzero.append(left_intercept(interpol_array[i,j]))
-        diff_min.append(np.argmin(interpol_array[i,j,rightzero[j]:leftzero[j]]) + rightzero[j])         #for each smoothing window size, store the minimal point
+        diff_min.append(np.argmin(interpol_array[i,j,rightzero[j]:leftzero[j]]) + rightzero[j])
         
     #First smoothing points calculated. At least the initial sub-set must be calculated for the analysis
     #at this point j is equal to subset size. Analysis to start with the first point, and extra smoothing and differntial spectra are only calculated as needed
@@ -259,9 +252,9 @@ for i in range(spectra.shape[0]):                                              #
             center_smoothness = correlation_subset(k, diff_min)
             plottable_center_smoothness.append(center_smoothness)
             if (x_new[rightzero[k]] - x_new[leftzero[k]]) > 15:     #a peak narrower than 15nm is assumed to be noise crossing the x-axis
-                if x_new[rightzero[k]] - x_new[diff_min[k]] > 5 and x_new[diff_min[k]] - x_new[leftzero[k]] > 5 :   #the intercepts must be either side and ruther than 5nm from the minimal point. (Using the minimum point like this can cause errors with spectra that have discontinuities at localised points due to source or detector changes)
-                    if right_smoothness <= 0.025 and left_smoothness <= 0.025 and center_smoothness <= 0.025:      #all metrics must show less than 2.5% variation within a sub-set size defined from the data interval.
-                        areas = []      #if these conditions are all met then that smoothing condition is considered best and the analysis is completed
+                if x_new[rightzero[k]] - x_new[diff_min[k]] > 5 and x_new[diff_min[k]] - x_new[leftzero[k]] > 5 :      #the intercepts must be either side and ruther than 5nm from the minimal point. (Using the minimum point like this can cause errors with spectra that have discontinuities at localised points due to source or detector changes)
+                    if right_smoothness <= 0.025 and left_smoothness <= 0.025 and center_smoothness <= 0.025:         #all metrics must show less than 2.5% variation within a sub-set size defined from the data interval.
+                        areas = []
                         focussed_wavelength = []
                         for x in np.arange(start=rightzero[k],stop=leftzero[k],dtype=int,step=1):
                             areas.append(areamin(x, interpol_array[i,k], rightzero[k], leftzero[k]))
@@ -284,7 +277,7 @@ for i in range(spectra.shape[0]):                                              #
                         final_window_list.append(local_window_list[k])
                         final_fraction_list.append(local_fraction_list[k])
                         final_flake_length.append(objekt.length(lw_filtered[i,k,:], wavelength))
-                        processed_spectra[1+i] = lw_filtered[i,k,:]                                            #save the optimised values for every gamma value
+                        processed_spectra[1+i] = lw_filtered[i,k,:]
                         processed_spectra[1+len(spectra)+i] = sec_diff[i,k,:]
                         convergence_flag = True
                     else:
@@ -335,7 +328,7 @@ for i in range(spectra.shape[0]):                                              #
                 k += 1
     
     except ValueError:
-        final_wavelength_a.append(50)        #this is being calculated only for each smoothing window, more efficient.  
+        final_wavelength_a.append(50) 
         final_error_a.append(100)
         final_window_list.append(local_window_list[k])
         final_fraction_list.append(local_fraction_list[k])
@@ -417,7 +410,7 @@ for i in range(len(spectra)):
 try:
     processed_headings.removesuffix(',')        #cleans format by removing final comma at end of string
 except:
-    print('Upgrade to Python3.9 for string cleaning. \n The output file may contain additional empty columns')       #Python3.9 required for easy edit of final comma only
+    print('Upgrade to Python3.9 for string cleaning. \n The output file may contain additional empty columns')
 
 processed_output = [list(n) for n in zip(*processed_spectra)]
 try:
