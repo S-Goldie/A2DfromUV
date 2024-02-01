@@ -16,6 +16,7 @@ Estimate of error in wavelength updated, new experimental form to use the gradie
 """------Import of the used modules--------------------------------------------"""
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 from statsmodels.nonparametric.smoothers_lowess import lowess
 from tkinter.filedialog import askopenfilename
 from scipy import interpolate
