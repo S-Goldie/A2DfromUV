@@ -2,6 +2,8 @@
 """
 Created on Fri Dec  2 16:16:12 2022
 
+GUI: Contains functions for useer input buttons to select the file, material type and error handling in event of insufficient data for length and or concentration analysis.
+
 @author: Nico Kubetschek & Stuart Goldie
 """
 
@@ -10,7 +12,6 @@ import tkinter as tk
  
 material = ""
 methode = "Ext"
-
 
 def function_name1():
     global material, methode 
@@ -51,7 +52,30 @@ def function_name9():
 def function_quite():
     root.destroy()
     root.quit()
-        
+
+def return_value(value, window):
+    global overide_flag
+    overide_flag = value
+    window.destroy()
+    window.quit()
+
+def open_second_window():
+    second_root = tk.Tk()
+    second_root.title("Range Error")
+    second_root.geometry("300x200")
+
+    label = tk.Label(second_root, wraplength=280, text="Spectra range is insufficent for length or concentration determination. Continue with thickness analysis only?")
+    label.pack()
+
+    #this button for the user to cancel current selection and return to material and file selection    
+    btn_true = tk.Button(second_root, text="Reselect Data", command=lambda: return_value(False, second_root), bg = "lightgreen",height=2,font=12,width=18,relief="groove")
+    btn_true.pack()
+
+    #this button for the user to overide the limitation and continue with analysis on a shorter range    
+    btn_false = tk.Button(second_root, text="Continue", command=lambda: return_value(True, second_root), bg = "lightcoral",height=2,font=12,width=18,relief="groove")
+    btn_false.pack()
+
+    second_root.mainloop()
 # creating root window
 root = tk.Tk()
  
