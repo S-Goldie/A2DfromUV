@@ -16,62 +16,90 @@ Estimate of error in wavelength updated, new experimental form to use the gradie
 """------Import of the used modules--------------------------------------------"""
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
 from statsmodels.nonparametric.smoothers_lowess import lowess
 from tkinter.filedialog import askopenfilename
 from scipy import interpolate
 from properties import *
 from tkinter import Tk
-from GUI import material,methode
+import GUI as gui
 """----------------------------------------------------------------------------"""
 
+import_flag = False
 
+"""------Import and sort data with format and range checks for error handling-------"""
+while import_flag != True:
+    Tk().withdraw()
+    Filename = askopenfilename()    
+    
+    short_name = Filename[Filename.rfind('/')+1:Filename.find('.csv')]
+    print("File loaded:", short_name)
+    #%%
+    
+    objekt=Material_Methode(gui.material, gui.methode)
+    format_error = False
+    
+    try:
+        try:
+            data = np.genfromtxt(Filename, skip_header=2,delimiter=",")
+        
+        except ValueError:
+            data = np.genfromtxt(Filename, skip_header=2,delimiter=",",invalid_raise=False)
+            print("Non-numerical values detected in csv file. Skipped parameter lines.")
+        
+        #Preparation and sorting of the data
+        wavelength=data[:,0]       
+        spectra=np.zeros([data.shape[1],data.shape[0]])
+                
+        count0=0
+        data_space = abs(np.mean(wavelength[1:]-wavelength[:-1]))  
+        
+        for i in range(data.shape[1]):
+            if sum(data[:,i])/len(data[:,i]) <= 200:
+                for j in range (data.shape[0]):
+                    spectra[i][j] = data[j,i]
+            if sum(spectra[i])==0.0:         
+                count0+=1
+                   
+        try:
+            for i in range(len(spectra)-count0+1):
+                if sum(spectra[i])== 0.0:
+                    spectra = np.delete(spectra,(i), axis = 0) 
+        except IndexError:
+            for i in range(len(spectra)-count0): 
+                if sum(spectra[i])== 0.0:
+                    spectra = np.delete(spectra,(i), axis = 0)
+        
+        
+        #Confirm spectra range is valid
+        if max(wavelength) > (objekt.wavelength_energy(objekt.E_bulk) + 45) and min(wavelength) < (objekt.wavelength_energy(objekt.E_ML) - 45):
+            neededminwavelength=min([objekt.R1,objekt.R2,objekt.normwavelength,objekt.coeff[0]])
+            minwavelength = min(wavelength)
+            if minwavelength > neededminwavelength:
+                print("Caution! Spectrum energy range does not fit to required energy for concentration or flake length determination")
+                gui.open_second_window()
+                if gui.overide_flag == True:
+                    length_flag =False
+                    import_flag = True
+                elif gui.overide_flag == False:
+                    import_flag = False
+            else:
+                length_flag = True
+                import_flag = True        
+        
+        else:
+            print("Caution! Spectrum energy range does not include resonance energy")
+          
+    except UnicodeDecodeError:
+        print("Non-data table file type selected")
+    
+    except IndexError:
+        print("Data format not recognised. Please see GitHub page for information on correct file format")
+    
+    except:
+        print("The file could not be read. \n Ensure .csv format and correct layout")
+    
 
-"""------Selection of data and method, loading of data into numpy array -------"""
-Tk().withdraw()
-Filename = askopenfilename()    
-
-short_name = Filename[Filename.rfind('/')+1:Filename.find('.csv')]
-print("File loaded:", short_name)
-#%%
-
-objekt=Material_Methode(material, methode) 
-
-try:
-    data = np.genfromtxt(Filename,
-                 skip_header=2,delimiter=",")
-except ValueError:
-    data = np.genfromtxt(Filename,
-                 skip_header=2,delimiter=",",invalid_raise=False)
-    print("Non-numerical values detected in csv file. Skipped parameter lines.")   
 """----------------------------------------------------------------------------"""
-
-
-"""---------------------Preparation and sorting of the data--------------------"""
-wavelength=data[:,0]       
-spectra=np.zeros([data.shape[1],data.shape[0]])
-
-
-count0=0
-data_space = abs(np.mean(wavelength[1:]-wavelength[:-1]))  
-
-for i in range(data.shape[1]):
-    if sum(data[:,i])/len(data[:,i]) <= 200:
-        for j in range (data.shape[0]):
-            spectra[i][j] = data[j,i]
-    if sum(spectra[i])==0.0:         
-        count0+=1
-           
-try:
-    for i in range(len(spectra)-count0+1):
-        if sum(spectra[i])== 0.0:
-            spectra = np.delete(spectra,(i), axis = 0) 
-except IndexError:
-    for i in range(len(spectra)-count0): 
-        if sum(spectra[i])== 0.0:
-            spectra = np.delete(spectra,(i), axis = 0)
-"""----------------------------------------------------------------------------"""
-
 
 """-----create color gradient in dependence to subset size and load labels-----"""
 colors=[]
@@ -94,39 +122,12 @@ from high to low wavelength, left will be higher wavelengths).
 Note: smoothing and differentiation is applied to the entire spectrum to minimise boundary errors.
 Use of energy (function in properties) to correct to wavelength scale.
 
-The boarders confine a regime in the wavelengthspace with a size of 90 nm around 
-the wavelenght which corresponds to the estimated bulk A exciton transition energy.
+The borders confine a regime in the wavelengthspace with a size of 90 nm around 
+the wavelength which corresponds to the estimated bulk A exciton transition energy.
 """
-
-"""-------------Confirm spectra range is valid---------------------------------"""
-if max(wavelength) > (objekt.wavelength_energy(objekt.E_bulk) + 10) and min(wavelength) < (objekt.wavelength_energy(objekt.E_ML) - 10):
-    energy_flag = True
-else:
-    print("\x1b[1;31mCaution! Spectrum energy range does not include resonance energy")
-    input('Hit Enter to terminate program')
-    sys.exit()
-
-neededminwavelength=min([objekt.R1,objekt.R2,objekt.normwavelength,objekt.coeff[0]])
-minwavelength = min(wavelength)
-if minwavelength > neededminwavelength:
-    print("\x1b[1;31mCaution! Spectrum energy range does not fit to requiered energy for concentration or flake length determination")
-    length_flag = False
-else:
-    length_flag = True
-
-"""----------------------------------------------------------------------------"""
     
 lf_lim = ((objekt.index(objekt.wavelength_energy(objekt.E_bulk),wavelength)) - int(45/abs(data_space)))      #lower index,  which means higher wavelength
 rt_lim = ((objekt.index(objekt.wavelength_energy(objekt.E_ML),wavelength)) + int(45/abs(data_space)))        #higher index, which means lower wavelength
-
-
-if lf_lim < 0:                                                                 #Checks if left side of the spectra is in the right wavelengthregime 
-    lf_lim = 0
-    print("wrong material")
-if rt_lim < 0:                                                                 #Checks if right side of the spectra is in the right wavelengthregime 
-    rt_lim = len(wavelength)
-    print("wrong material")
-"""----------------------------------------------------------------------------"""
 
 
 """------------------------Functions-------------------------------------------"""
@@ -236,7 +237,10 @@ for i in range(spectra.shape[0]):                                              #
         local_window_list.append(data_point_window)
         local_fraction_list.append(data_point_window/len(spectra[i]))
         smoothed = lowess(spectra[i], wavelength, frac=(data_point_window/len(spectra[i])),it=0,return_sorted=False)
-        lw_filtered[i,j]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])
+        if length_flag == True:
+            lw_filtered[i,j]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])
+        elif length_flag == False:
+            lw_filtered[i,j]=smoothed/max(smoothed)
         sec_diff[i,j] = np.gradient(np.gradient(lw_filtered[i,j], wavelength),wavelength)
         interpol= interpolate.interp1d(wavelength[lf_lim:rt_lim], sec_diff[i,j][lf_lim:rt_lim],kind="cubic")
         interpol_array[i,j] = interpol(x_new)
@@ -255,12 +259,16 @@ for i in range(spectra.shape[0]):                                              #
     
     try:
         while convergence_flag != True:
-            if k == 1000:
+            if k == 999:
                 print("Caution: " + labels[i] + " could not be analysed.")
-                final_wavelength_a.append(5)
-                final_error_a.append(100)
+                final_wavelength_a.append("--")
+                final_error_a.append("--")
                 final_window_list.append(local_window_list[k-1])
                 final_fraction_list.append(local_fraction_list[k-1])
+                if length_flag == True:
+                    final_flake_length.append("--")
+                elif length_flag == False:
+                    final_flake_length.append('Insufficient Data')
                 break
             right_smoothness = correlation_subset(k, rightzero)
             plottable_right_smoothness.append(right_smoothness)
@@ -322,7 +330,10 @@ for i in range(spectra.shape[0]):                                              #
                     local_window_list.append(data_point_window)
                     local_fraction_list.append(data_point_window/len(spectra[i]))
                     smoothed = lowess(spectra[i], wavelength, frac=(data_point_window/len(spectra[i])),it=0,return_sorted=False)
-                    lw_filtered[i,l]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])
+                    if length_flag == True:
+                        lw_filtered[i,l]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])
+                    elif length_flag == False:
+                        lw_filtered[i,l]= smoothed/max(smoothed)
                     sec_diff[i,l] = np.gradient(np.gradient(lw_filtered[i,l], wavelength),wavelength)
                     interpol= interpolate.interp1d(wavelength[lf_lim:rt_lim], sec_diff[i,l][lf_lim:rt_lim],kind="cubic")
                     interpol_array[i,l] = interpol(x_new)
@@ -337,7 +348,10 @@ for i in range(spectra.shape[0]):                                              #
                 local_window_list.append(data_point_window)
                 local_fraction_list.append(data_point_window/len(spectra[i]))
                 smoothed = lowess(spectra[i], wavelength, frac=(data_point_window/len(spectra[i])),it=0,return_sorted=False)
-                lw_filtered[i,l]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])
+                if length_flag == True:
+                    lw_filtered[i,l]= smoothed/(smoothed[objekt.index(objekt.normwavelength, wavelength)])
+                elif length_flag == False:
+                    lw_filtered[i,l]= smoothed/max(smoothed)
                 sec_diff[i,l] = np.gradient(np.gradient(lw_filtered[i,l], wavelength),wavelength)
                 interpol= interpolate.interp1d(wavelength[lf_lim:rt_lim], sec_diff[i,l][lf_lim:rt_lim],kind="cubic")
                 interpol_array[i,l] = interpol(x_new)
@@ -348,11 +362,15 @@ for i in range(spectra.shape[0]):                                              #
                 k += 1
     
     except ValueError:
-        final_wavelength_a.append(50) 
-        final_error_a.append(100)
+        print("Caution: " + labels[i] + " could not be analysed.")
+        final_wavelength_a.append("--") 
+        final_error_a.append("--")
         final_window_list.append(local_window_list[k])
         final_fraction_list.append(local_fraction_list[k])
-        final_flake_length.append(0)
+        if length_flag == True:
+            final_flake_length.append("--")
+        elif length_flag == False:
+            final_flake_length.append('Insufficient Data')
 
 
 #%% At this point, smooth parameters have been identified and recorded in small lists denoted final.
@@ -366,7 +384,7 @@ for i in range(len(spectra)):
     plt.title('Spectrum', fontsize = 14)
     
     plt.plot(wavelength, lw_filtered[i,int((final_window_list[i]/2)-1.5),:], color=colors[i], label=labels[i])
-    if final_wavelength_a[i] != 0:
+    if final_wavelength_a[i] != '--':
         plt.axvline(final_wavelength_a[i], color=colors[i])
     plt.xlabel("$\lambda / nm$",fontsize=14)
     plt.ylabel("$Ext$",fontsize=14)
@@ -376,11 +394,10 @@ for i in range(len(spectra)):
     plt.subplot(1,2,2)
     plt.title('Differentiated',fontsize=14)
     
-    #plt.scatter(wavelength[lf_lim:rt_lim], sec_diff[i,int((final_window_list[i]/2)-1.5),lf_lim:rt_lim],color=colors[i], marker='o', s=6, label=(labels[i]))
-    plt.plot(x_new,interpol_array[i,int((final_window_list[i]/2)-1.5),:],color=colors[i], linestyle='-', label=("$\lambda_A$: {:.2f} nm".format(final_wavelength_a[i])),linewidth=2,alpha=0.4)
-    
     if final_wavelength_a[i] != 0:
         plt.axvline(final_wavelength_a[i],color=colors[i])
+        plt.plot(x_new,interpol_array[i,int((final_window_list[i]/2)-1.5),:],color=colors[i], linestyle='-', label=("$\lambda_A$: {:.2f} nm".format(final_wavelength_a[i])),linewidth=2,alpha=0.4)
+    
     plt.xlim(wavelength[rt_lim+5],wavelength[lf_lim-5])
     plt.xlabel("$\lambda / nm$",fontsize=14)
     plt.ylabel("$\\frac{\partial^2 Ext.}{\partial \lambda^2}$",fontsize=14)
@@ -400,17 +417,24 @@ final_concentration = []
 final_Nv_error = []
      
 for m in np.arange(len(final_wavelength_a)):
-    final_energy_a.append(objekt.energy_wavelength(final_wavelength_a[m]))
-    final_energy_a_error.append(final_energy_a[m] * final_error_a[m] / final_wavelength_a[m])
-    final_thickness.append(objekt.thickness(final_wavelength_a[m]))
-    final_Nv_error.append(objekt.thickness_error(final_energy_a[m],final_energy_a_error[m]))
+    if final_wavelength_a[m] == "--":
+        final_energy_a.append("--")
+        final_energy_a_error.append("--")
+        final_thickness.append("--")
+        final_Nv_error.append("--")     
+    else:
+        final_energy_a.append(objekt.energy_wavelength(final_wavelength_a[m]))
+        final_energy_a_error.append(final_energy_a[m] * final_error_a[m] / final_wavelength_a[m])
+        final_thickness.append(objekt.thickness(final_wavelength_a[m]))
+        final_Nv_error.append(objekt.thickness_error(final_energy_a[m],final_energy_a_error[m]))
     if objekt.coeff == 0:
         final_concentration.append("Not Available")
-    elif length_flag == True:
-        final_concentration.append((spectra[m][objekt.index(objekt.coeff[0],wavelength)])/objekt.coeff[1])
     elif length_flag == False:
         final_concentration.append('Insufficient Data')
+    elif length_flag == True:
+        final_concentration.append((spectra[m][objekt.index(objekt.coeff[0],wavelength)])/objekt.coeff[1])
 output_headings = str('Sample,Exciton Wavelength / nm,Error / nm,Exciton Energy / eV,Error / eV,<N>vf,<N>vf error,Flake Length / nm,Smoothing Window,Smoothing Fraction,Concentration g/(L*cm)')
+
 try:
     np.savetxt(Filename.removesuffix('.csv') + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, final_energy_a, final_energy_a_error, final_thickness,final_Nv_error, final_flake_length, final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
 except AttributeError:
@@ -430,3 +454,7 @@ try:
     np.savetxt(Filename.removesuffix('.csv') + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
 except AttributeError:
     np.savetxt(Filename[:-4] + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
+
+print('Data saved')
+plt.show()
+input('Press Enter or close window to exit program')
