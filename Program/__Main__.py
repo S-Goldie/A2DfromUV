@@ -31,7 +31,11 @@ while import_flag != True:
     Tk().withdraw()
     Filename = askopenfilename()    
     
-    short_name = Filename[Filename.rfind('/')+1:Filename.find('.csv')]
+    if '.csv' in Filename:
+        short_name = Filename[Filename.rfind('/')+1:Filename.find('.csv')]
+    elif '.txt' in Filename:
+        short_name = Filename[Filename.rfind('/')+1:Filename.find('.txt')]
+    
     print("File loaded:", short_name)
     #%%
     
@@ -39,12 +43,29 @@ while import_flag != True:
     format_error = False
     
     try:
-        try:
-            data = np.genfromtxt(Filename, skip_header=2,delimiter=",")
-        
-        except ValueError:
-            data = np.genfromtxt(Filename, skip_header=2,delimiter=",",invalid_raise=False)
-            print("Non-numerical values detected in csv file. Skipped parameter lines.")
+        file_found = False
+        rows_skipped = 0
+
+        while file_found != True:
+            if '.csv' in Filename:
+                trial_in = np.genfromtxt(Filename, skip_header=rows_skipped, max_rows=1, delimiter=",")
+                if np.isnan(trial_in[0]):
+                    rows_skipped += 1
+                else:    
+                    file_found = True
+                    data = np.genfromtxt(Filename, skip_header=rows_skipped, delimiter=",")
+            
+            elif '.txt' in Filename:
+                try:
+                    trial_in = np.genfromtxt(Filename, skip_header=rows_skipped, max_rows=1, delimiter=None)
+                    if np.isnan(trial_in[0]):
+                        rows_skipped += 1
+                    else:    
+                        file_found = True
+                        data = np.genfromtxt(Filename, skip_header=rows_skipped, delimiter=None)
+                except:
+                    print('File format could not be recognised')
+                    break
         
         #Preparation and sorting of the data
         wavelength=data[:,0]       
@@ -107,12 +128,17 @@ for i in range(1,spectra.shape[0]+1):
     colors.append([1-i/(spectra.shape[0]),0.1,i/(spectra.shape[0]),0.7])
 
 
-labels = np.loadtxt(Filename,
-                 delimiter=",",dtype=str,max_rows=1)
+try:
+    if '.csv' in Filename:
+        labels = np.loadtxt(Filename, delimiter=",", dtype=str, max_rows=1)
+    elif '.txt' in Filename:
+        labels = np.loadtxt(Filename, delimiter=None, dtype=str, max_rows=1)
 
-for i in range(len(labels)-count0):
-    if labels[i]=="":
-        labels = np.delete(labels,(i), axis = 0) 
+    for i in range(len(labels)-count0):
+        if labels[i]=="":
+            labels = np.delete(labels,(i), axis = 0) 
+except:
+    labels = range(1, len(spectra))
 """----------------------------------------------------------------------------"""
 
 
