@@ -10,7 +10,7 @@ from scipy.odr import *
 
 Ebulk=1.828   #Fixed bulk transition energy
 
-data=np.genfromtxt("D:\\Materialfits.csv",delimiter=",")  
+data=np.genfromtxt("D:\\Materialfits.csv",delimiter=",")  #Load dataset
 x=data[:,0]       #Algorithmic determined transition energies
 y=data[:,1]       #AFM measured layer number
 xerr=data[:,2]    #Error in Algorithmic determined transition energies
