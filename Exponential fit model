@@ -8,31 +8,37 @@ import matplotlib.pyplot as plt
 from scipy.odr import *
 
 
-Ebulk=1.828   #Fixed bulk transition energy
+Ebulk = 1.828   #Fixed bulk transition energy
 
-data=np.genfromtxt("D:\\Materialfits.csv",delimiter=",")  #Load dataset
-x=data[:,0]       #Algorithmic determined transition energies
-y=data[:,1]       #AFM measured layer number
-xerr=data[:,2]    #Error in Algorithmic determined transition energies
-yerr=data[:,3]    #Error in AFM measured layer number
-width=3.1496063
+data = np.genfromtxt("D:\\Materialfits.csv",delimiter=",")  #Load dataset
+x = data[:,0]       #Algorithmic determined transition energies
+y = data[:,1]       #AFM measured layer number
+xerr = data[:,2]    #Error in Algorithmic determined transition energies
+yerr = data[:,3]    #Error in AFM measured layer number
+width = 3.1496063
 
 def exp1(p,x):
-    R,N_1 = p
-    
+    """Exponential fit model"""
+    R,N_1 = p    
     return (N_1)*np.exp(R*(x-Ebulk))
 
-
 def fehlerx(x,R,N_1,dR,dN1):
+    """Propagates the error to define confidence intervals"""
     dx = np.mean(xerr)
     return abs(np.exp(R*(x-Ebulk)))*dN1+abs((N_1)*(x-Ebulk)*np.exp((x-Ebulk)*R))*dR+abs(R*(N_1)*(np.exp(R*(x-Ebulk)))*dx)
 
 exp_model=Model(exp1)
 datas = RealData(x,y,sx=xerr,sy=yerr)
-odr = ODR(datas,exp_model,beta0=[-12,21])       
+odr = ODR(datas,exp_model,beta0=[-12,21]) #optimal start parameters can vary for different materials      
 out = odr.run()
-  
+print("Fitted R:",out.beta[0], "\nFitted N:",out.beta[1])      #fitted parameters
+print("Std R:",out.sd_beta[0], "\nStd N$:",out.sd_beta[1])     #Standard deviation from the fit parameters
 
+
+
+
+"""For plotting"""
+#%%
 xfit=np.linspace(min(x)-0.05,max(x)+0.05,1000)
 yfit=exp1(out.beta,xfit)
 
@@ -50,5 +56,4 @@ plt.xlim(1.82,1.9)
 plt.ylim(0,30)
 plt.tight_layout()
 
-print("Fitted R:",out.beta[0], "\nFitted N:",out.beta[1])
-print("Std R:",out.sd_beta[0], "\nStd N$:",out.sd_beta[1])
+
