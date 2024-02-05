@@ -45,11 +45,15 @@ Please be aware of the large file size of the program when downloaded and saved 
 
 Example data sets are available within the `example` folder
 
-Ensure datasets are saved in `.csv` format, with **Wavelength** data in the leftmost column. Select the material in the pop-up window, select the data file and the analysis will be completed automatically outputting the metrics and smoothed spectra in the same directory as the target file.
-* Metrics: this file contains the calculated metrics as discussed in our paper. Concentration values are returned assuming a 1 cm pathlength, if a different path length is used correct according to Beer-Lambert. _Values of 0 in data columns indicate instability during fitting_
-* Spectra: this file contains the smoothed spectra and second derivative used for the analysis in csv. format.
+Ensure datasets are saved with **Wavelength** data, **in nm**, in the leftmost column and extinction data in subsequent columns. For best results, use `.csv` files with sample labels in the top row above Wavelength columns. Best efforts have been made for flexibility in data format and `.txt` files with common delimiters are possible, but sample labels may become lost.
 
-If spectra are imported that do not include the required spectra range, this is will be indicated in the command window. If the required exciton transition is absent the program will terminate with an error warning. If the length or concentration range is absent this will be indicated in the `Metrics` file, but thickness determination will still be attempted.
+For analysis select the required material in the pop-up window, select the data file and the analysis will be completed automatically outputting the metrics and smoothed spectra in the same directory as the target file.
+* Metrics: this file contains the calculated metrics as discussed in our paper. Concentration values are returned assuming a 1 cm pathlength, if a different path length is used correct according to Beer-Lambert.
+* Spectra: this file contains the smoothed spectra and second derivative used for the analysis in `.csv` format.
+
+If spectra are imported that do not include the required spectral range, this is will be indicated in the command window:
+* If the required exciton transition is absent the program will terminate with an error warning.
+* If the length or concentration range is absent this will be indicated in the `Metrics` file, but thickness determination will still be attempted.
 
 ## References ##
 
