@@ -1,0 +1,54 @@
+
+"""This Programm fits Material datasets based on extiction 
+measured transition energies and AFM measured thicknesses 
+using orthogonal distance regression"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.odr import *
+
+
+Ebulk=1.828   #Fixed bulk transition energy
+
+data=np.genfromtxt("D:\\Materialfits.csv",delimiter=",")  
+x=data[:,0]       #Algorithmic determined transition energies
+y=data[:,1]       #AFM measured layer number
+xerr=data[:,2]    #Error in Algorithmic determined transition energies
+yerr=data[:,3]    #Error in AFM measured layer number
+width=3.1496063
+
+def exp1(p,x):
+    R,N_1 = p
+    
+    return (N_1)*np.exp(R*(x-Ebulk))
+
+
+def fehlerx(x,R,N_1,dR,dN1):
+    dx = np.mean(xerr)
+    return abs(np.exp(R*(x-Ebulk)))*dN1+abs((N_1)*(x-Ebulk)*np.exp((x-Ebulk)*R))*dR+abs(R*(N_1)*(np.exp(R*(x-Ebulk)))*dx)
+
+exp_model=Model(exp1)
+datas = RealData(x,y,sx=xerr,sy=yerr)
+odr = ODR(datas,exp_model,beta0=[-12,21])       
+out = odr.run()
+  
+
+xfit=np.linspace(min(x)-0.05,max(x)+0.05,1000)
+yfit=exp1(out.beta,xfit)
+
+plt.figure(figsize=(width*2,width*3/2))
+plt.plot(xfit,yfit,label="exp. fit",color=[1,0.2,0],linewidth=2)
+plt.errorbar(x, y, yerr,xerr,linestyle="",color="k",capsize=2,label="data")
+plt.fill_between(xfit, yfit-fehlerx(xfit,*out.beta,*out.sd_beta),yfit+fehlerx(xfit,*out.beta,*out.sd_beta),color=[0,0.2,1,0.2],label="error")
+plt.xlabel("E$_A$ / eV",fontsize=20)
+plt.ylabel("<N>$_{vf}$",fontsize=20)
+plt.xticks([1.83,1.85,1.87,1.89],[1.83,1.85,1.87,1.89],fontsize=16)
+plt.yticks(fontsize=16)
+
+plt.legend(fontsize=16)
+plt.xlim(1.82,1.9)
+plt.ylim(0,30)
+plt.tight_layout()
+
+print("Fitted R:",out.beta[0], "\nFitted N:",out.beta[1])
+print("Std R:",out.sd_beta[0], "\nStd N$:",out.sd_beta[1])
