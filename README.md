@@ -34,12 +34,12 @@ A standard anaconda installation includes all required packages [click here for 
 * Launch the script from `__main__` ensuring the `GUI` and `properties` files are in the same folder
 
 #### Compiled .exe files ####
-*Coming soon*
-* Download the relevant program folder for your operating system
-* Extract the files into a new folder, this will contain all the program files
+*Currently this is only available for Windows systems. We hope to soon produce a Mac iOS release*
+* Download the zipped folder
+* Extract the files into a new folder, this will contain all the program files and must be kept intact
 * Launch the application from the .exe file within this folder (for convinience you may wish to make a Desktop shortcut to this .exe file)
 
-Please be aware of the large file size of the program when downloaded and saved in this format; this is a limitation of compiling Python code into machine code. We have attempted to minimise this file size where possible, but be aware that the most up-to-date versions and best performance will be achieved by using the .py files within your own Python environment. When the .exe file is opened for the first time in a given session (i.e after restarting) it may take up to 30 seconds to load - within this time it may appear the program has frozen on the black command window.
+Please be aware of the large file size of the program when downloaded and saved in this format (~1GB); this is a limitation of compiling Python code into machine code. We have attempted to minimise this file size where possible, but be aware that the most up-to-date versions and best performance will be achieved by using the .py files within your own Python environment. When the .exe file is opened for the first time in a given session (i.e after restarting) it may take up to 30 seconds to load - within this time it may appear the program has frozen on the black command window.
 
 ## Usage ##
 
