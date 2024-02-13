@@ -30,19 +30,17 @@ import_flag = False
 while import_flag != True:
     Tk().withdraw()
     Filename = askopenfilename()    
-    
-    if '.csv' in Filename:
-        short_name = Filename[Filename.rfind('/')+1:Filename.find('.csv')]
-    elif '.txt' in Filename:
-        short_name = Filename[Filename.rfind('/')+1:Filename.find('.txt')]
-    
-    print("File loaded:", short_name)
-    #%%
-    
-    objekt=Material_Methode(gui.material, gui.methode)
-    format_error = False
-    
+
     try:
+        if '.csv' in Filename:
+            short_name = Filename[Filename.rfind('/')+1:Filename.find('.csv')]
+        elif '.txt' in Filename:
+            short_name = Filename[Filename.rfind('/')+1:Filename.find('.txt')]
+        print("File loaded:", short_name)
+                
+        objekt=Material_Methode(gui.material, gui.methode)
+        format_error = False
+
         file_found = False
         rows_skipped = 0
 
