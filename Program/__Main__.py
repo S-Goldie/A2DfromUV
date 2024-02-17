@@ -7,7 +7,7 @@ Production of plots contrasting different smoothing paramters and loss functions
 
 Version: 1.2.2 - algorithm to identify the minimum smoothing required using the variability of the x-axis intercepts and peak minimum in second derivative space, as well as minimum peak width and distance between features.
 Once minimum smoothing identified, center of integral area used to determine the peak position in nanometers which can be converted into energy and used for metric calculation.
-Current metrics: old ln relation from Kevin's thesis, updated fitting required
+Current metrics: 
 Estimate of error in wavelength updated, new experimental form to use the gradient of the data outside the intercepts to estimate noise and the peak intensity to estimate signal.
 
 @author: Stuart Goldie, Nico Kubetschek
