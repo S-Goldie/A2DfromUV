@@ -34,7 +34,7 @@ A standard anaconda installation includes all required packages [click here for 
 * Launch the script from `__main__` ensuring the `GUI` and `properties` files are in the same folder
 
 #### Compiled .exe files ####
-*Currently this is only available for Windows systems. We hope to soon produce a Mac iOS release*
+*Currently this is only available for Windows systems. We hope to soon produce a MacOS release*
 * Download the zipped folder
 * Extract the files into a new folder, this will contain all the program files and must be kept intact
 * Launch the application from the .exe file within this folder (for convinience you may wish to make a Desktop shortcut to this .exe file)
