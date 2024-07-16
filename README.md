@@ -3,7 +3,7 @@
 
 Python script for applying an automated analysis protocol to UV/VIS spectra of 2D nanoflake dispersions to extract thickness and length metrics. Automated smoothing and second derivative determination allows easy and reproducible analysis of typical spectra.
 
-__Disclaimer:__ please note the metrics developed and output by this program are subject to limitations detailed in our published paper [doi coming soon]. Thickness and concentration values were fitted from dispersions in aqueous dispersion. We cannot guarantee their reliability in different solvents, especially those with different dielectric permittivity's. Length metrics were fitted for small nanosheets typically produced by LPE, but larger aspect ratio sheets may deviate from this trend.
+__Disclaimer:__ please note the metrics developed and output by this program are subject to limitations detailed in our [accompanying paper](https://onlinelibrary.wiley.com/doi/10.1002/admi.202400311). Thickness and concentration values were fitted from dispersions in aqueous dispersion. We cannot guarantee their reliability in different solvents, especially those with different dielectric permittivity's. Length metrics were fitted for small nanosheets typically produced by LPE, but larger aspect ratio sheets may deviate from this trend.
 
 Included in the repository are the following:
 * Instructions for use
@@ -57,4 +57,4 @@ If spectra are imported that do not include the required spectral range, this is
 
 ## References ##
 
-If you use A2DfromUV in your work, please cite: *manuscript in preparation*
+If you use A2DfromUV in your work, please cite: [DOI:10.1002/admi.202400311](https://onlinelibrary.wiley.com/doi/10.1002/admi.202400311)
