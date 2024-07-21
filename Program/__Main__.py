@@ -42,20 +42,36 @@ while import_flag != True:
 
         file_found = False
         rows_skipped = 0
+        second_rows_skipped = 0
 
         while file_found != True:
             if '.csv' in Filename:
-                trial_in = np.genfromtxt(Filename, skip_header=rows_skipped, max_rows=1, delimiter=",")
-                if np.isnan(trial_in[0]):
-                    rows_skipped += 1
-                else:    
-                    file_found = True
-                    try:
-                        data = np.genfromtxt(Filename, skip_header=rows_skipped, delimiter=",", invalid_raise=True)
-                    except ValueError:
-                        data = np.genfromtxt(Filename, skip_header=rows_skipped, delimiter=",", invalid_raise=False)
-                        print('Metadata or comments found in data file leading to ConversionWarning. \
-                              \n Analysis will be attempted but check for non numerical rows in input data.')
+                try:
+                    trial_in = np.genfromtxt(Filename, skip_header=rows_skipped, max_rows=1, delimiter=",", invalid_raise=True)
+                    if np.isnan(trial_in[0]) or np.size(trial_in) < 2:
+                        rows_skipped += 1
+                    else:    
+                        file_found = True
+                        file_orientation = 'Vertical'
+                        try:
+                            data = np.genfromtxt(Filename, skip_header=rows_skipped, delimiter=",", invalid_raise=True)
+                        except ValueError:
+                            data = np.genfromtxt(Filename, skip_header=rows_skipped, delimiter=",", invalid_raise=False)
+                            print('Metadata or comments found in data file leading to ConversionWarning. \
+                                  \n Analysis will be attempted but check for non numerical rows in input data.')
+                except IndexError:
+                    trial_in = np.genfromtxt(Filename, skip_header=second_rows_skipped, max_rows=1, delimiter=",", invalid_raise=True)
+                    if np.size(trial_in) < 2 or np.all(np.isnan(trial_in[:])):
+                        second_rows_skipped += 1
+                    else:    
+                        file_found = True
+                        file_orientation = 'Horizonal'
+                        try:
+                            data = np.transpose(np.genfromtxt(Filename, skip_header=second_rows_skipped, delimiter=",", invalid_raise=True))
+                        except ValueError:
+                            data = np.transpose(np.genfromtxt(Filename, skip_header=second_rows_skipped, delimiter=",", invalid_raise=False))
+                            print('Metadata or comments found in data file leading to ConversionWarning. \
+                                  \n Analysis will be attempted but check for non numerical rows in input data.')
             
             elif '.txt' in Filename:
                 try:
@@ -64,10 +80,24 @@ while import_flag != True:
                         rows_skipped += 1
                     else:    
                         file_found = True
+                        file_orientation = 'Vertical'
                         try:
                             data = np.genfromtxt(Filename, skip_header=rows_skipped, delimiter=None, invalid_raise=True)
                         except ValueError:
                             data = np.genfromtxt(Filename, skip_header=rows_skipped, delimiter=None, invalid_raise=False)
+                            print('Metadata or comments found in data file leading to ConversionWarning. \
+                                  \n Analysis will be attempted but check for non numerical rows in input data.')
+                except IndexError:
+                    trial_in = np.genfromtxt(Filename, skip_header=second_rows_skipped, max_rows=1, delimiter=None, invalid_raise=True)
+                    if np.size(trial_in) < 2 or np.all(np.isnan(trial_in[:])):
+                        second_rows_skipped += 1
+                    else:    
+                        file_found = True
+                        file_orientation = 'Horizonal'
+                        try:
+                            data = np.transpose(np.genfromtxt(Filename, skip_header=second_rows_skipped, delimiter='\t'or','or';', invalid_raise=True))
+                        except ValueError:
+                            data = np.transpose(np.genfromtxt(Filename, skip_header=second_rows_skipped, delimiter='\t'or','or';', invalid_raise=False))
                             print('Metadata or comments found in data file leading to ConversionWarning. \
                                   \n Analysis will be attempted but check for non numerical rows in input data.')
                 except:
@@ -138,13 +168,20 @@ colors=[]
 for i in range(1,spectra.shape[0]+1):
     colors.append([1-i/(spectra.shape[0]),0.1,i/(spectra.shape[0]),0.7])
 
-
+#Attempt to read spectral labels from the data file
 try:
-    if '.csv' in Filename:
-        labels = np.loadtxt(Filename, delimiter=",", dtype=str, max_rows=1)
-    elif '.txt' in Filename:
-        labels = np.loadtxt(Filename, delimiter=None, dtype=str, max_rows=1)
+    if file_orientation == 'Vertical':
+        if '.csv' in Filename:
+            labels = np.loadtxt(Filename, delimiter=",", dtype=str, max_rows=1)
+        elif '.txt' in Filename:
+            labels = np.loadtxt(Filename, delimiter=None, dtype=str, max_rows=1)
 
+    elif file_orientation == 'Horizonal':
+        if '.csv' in Filename:
+            labels = np.loadtxt(Filename, delimiter=",", dtype=str, usecols=0)
+        elif '.txt' in Filename:
+            labels = np.loadtxt(Filename, delimiter=None, dtype=str, usecols=0)
+    
     for i in range(len(labels)-count0):
         if labels[i]=="":
             labels = np.delete(labels,(i), axis = 0) 
@@ -163,8 +200,8 @@ The borders confine a regime in the wavelengthspace with a size of 90 nm around
 the wavelength which corresponds to the estimated bulk A exciton transition energy.
 """
     
-lf_lim = ((objekt.index(objekt.wavelength_energy(objekt.E_bulk),wavelength)) - int(45/abs(data_space)))      #lower index,  which means higher wavelength
-rt_lim = ((objekt.index(objekt.wavelength_energy(objekt.E_ML),wavelength)) + int(45/abs(data_space)))        #higher index, which means lower wavelength
+lf_lim = ((objekt.index(objekt.wavelength_energy(objekt.E_bulk),wavelength)) - int(45/abs(data_space)))
+rt_lim = ((objekt.index(objekt.wavelength_energy(objekt.E_ML),wavelength)) + int(45/abs(data_space)))
 
 #%%
 """------------------------Functions-------------------------------------------"""
@@ -208,7 +245,7 @@ def right_intercept(interpollist):
     m = 1
     interpolright = np.argmax(interpollist[:center])
     while flag == False and m < center:
-        if any(n > 0 for n in interpollist[:center]) and any(n < 0 for n in interpollist[:center]):     #check there are negative and values within the range of interest for there to be an intercept
+        if any(n > 0 for n in interpollist[:center]) and any(n < 0 for n in interpollist[:center]):
             if interpollist[center - m] < 0:
                 m += 1
             elif interpollist[center - m] > 0:
@@ -269,7 +306,7 @@ for i in range(spectra.shape[0]):                                              #
     local_window_list = []
     local_fraction_list = []
     
-    for j in range(0,subset_size):                                             #Iterate over the sub-set to produce enough data points for varation analysis
+    for j in range(0,subset_size):                                             #Iterate over the sub-set to produce enough data points for variation analysis
         data_point_window = (j+1.5)*2                                          #j is an index, here we increase smoothing window length by 2, starting at 3 points when j=0
         local_window_list.append(data_point_window)
         local_fraction_list.append(data_point_window/len(spectra[i]))
@@ -282,12 +319,12 @@ for i in range(spectra.shape[0]):                                              #
         interpol= interpolate.interp1d(wavelength[lf_lim:rt_lim], sec_diff[i,j][lf_lim:rt_lim],kind="cubic")
         interpol_array[i,j] = interpol(x_new)
         
-        rightzero.append(right_intercept(interpol_array[i,j]))  #use functions to find the left and right intercept - currently causes error for some samples wth a wide possible peak range because the initial centre can be positive to start.
+        rightzero.append(right_intercept(interpol_array[i,j]))
         leftzero.append(left_intercept(interpol_array[i,j]))
         diff_min.append(np.argmin(interpol_array[i,j,rightzero[j]:leftzero[j]]) + rightzero[j])
         
     #First smoothing points calculated. At least the initial sub-set must be calculated for the analysis
-    #at this point j is equal to subset size. Analysis to start with the first point, and extra smoothing and differntial spectra are only calculated as needed
+    #at this point j is equal to subset size. Analysis to start with the first point, and extra smoothing and differential spectra are only calculated as needed
     convergence_flag = False
     k = 0
     plottable_right_smoothness = []
@@ -324,8 +361,9 @@ for i in range(spectra.shape[0]):                                              #
                 for x in np.arange(start=rightzero[k],stop=leftzero[k],dtype=int,step=1):
                     areas.append(areamin(x, interpol_array[i,k], rightzero[k], leftzero[k]))
                 center = x_new[np.argmin(areas)+rightzero[k]]
-                            
-                noise_list = np.gradient(sec_diff[i,k][objekt.index(x_new[leftzero[k]],wavelength):rt_lim])      #calculate the gradient as an approximation of the noise in the peak region, to the left of the x-intercept of the peak
+                
+                #calculate the gradient as an approximation of the noise in the peak region, to the left of the x-intercept of the peak            
+                noise_list = np.gradient(sec_diff[i,k][objekt.index(x_new[leftzero[k]],wavelength):rt_lim])
                 np.append(noise_list, np.gradient(sec_diff[i,k][lf_lim:objekt.index(x_new[rightzero[k]],wavelength)]))
                 noise = np.mean(np.absolute(noise_list))
                 signal = np.min(sec_diff[i,k][objekt.index(x_new[rightzero[k]],wavelength):objekt.index(x_new[leftzero[k]],wavelength)])
@@ -401,13 +439,11 @@ for i in range(len(spectra)):
     if final_wavelength_a[i] != '--':
         plt.plot(x_new,interpol_array[i,int((final_window_list[i]/2)-1.5),:],color=colors[i], linestyle='-', label=("$\lambda_A$: {:.2f} nm".format(final_wavelength_a[i])),linewidth=2,alpha=0.4)
         plt.axvline(final_wavelength_a[i],color=colors[i])
-    
-    plt.xlim(wavelength[rt_lim+5],wavelength[lf_lim-5])
-    plt.xlabel("$\lambda / nm$",fontsize=14)
-    plt.ylabel("$\\frac{\partial^2 Ext.}{\partial \lambda^2}$",fontsize=14)
-    plt.axhline(0,color="k")
-    plt.legend()
-
+        plt.xlim(wavelength[rt_lim+5],wavelength[lf_lim-5])
+        plt.xlabel("$\lambda / nm$",fontsize=14)
+        plt.ylabel("$\\frac{\partial^2 Ext.}{\partial \lambda^2}$",fontsize=14)
+        plt.axhline(0,color="k")
+        plt.legend()
 
 names = []
 for i in range(len(spectra)):
@@ -440,9 +476,18 @@ for m in np.arange(len(final_wavelength_a)):
 output_headings = str('Sample,Exciton Wavelength / nm,Error / nm,Exciton Energy / eV,Error / eV,<N>vf,<N>vf error,Flake Length / nm,Smoothing Window,Smoothing Fraction,Concentration g/(L*cm)')
 
 try:
-    np.savetxt(Filename.removesuffix('.csv') + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, final_energy_a, final_energy_a_error, final_thickness,final_Nv_error, final_flake_length, final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
+    if '.csv' in Filename:
+        np.savetxt(Filename.removesuffix('.csv') + '_Metrics.csv', np.column_stack((names, final_wavelength_a, \
+            final_error_a, final_energy_a, final_energy_a_error, final_thickness,final_Nv_error, final_flake_length, \
+            final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
+    elif '.txt' in Filename:
+        np.savetxt(Filename.removesuffix('.txt') + '_Metrics.csv', np.column_stack((names, final_wavelength_a, \
+            final_error_a, final_energy_a, final_energy_a_error, final_thickness,final_Nv_error, final_flake_length, \
+            final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
 except AttributeError:
-    np.savetxt(Filename[:-4] + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, final_energy_a, final_energy_a_error, final_thickness, final_Nv_error, final_flake_length, final_window_list, final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
+    np.savetxt(Filename[:-4] + '_Metrics.csv', np.column_stack((names, final_wavelength_a, final_error_a, \
+        final_energy_a, final_energy_a_error, final_thickness, final_Nv_error, final_flake_length, final_window_list, \
+            final_fraction_list,final_concentration)), delimiter=',', header=output_headings, fmt='%s')
 processed_headings = "Wavelength / nm,"
 for i in range(len(spectra)):
     processed_headings = processed_headings + str(labels[i]) + '-Smoothed,'
@@ -455,7 +500,10 @@ except:
     
 processed_output = [list(n) for n in zip(*processed_spectra)]
 try:
-    np.savetxt(Filename.removesuffix('.csv') + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
+    if '.csv' in Filename:
+        np.savetxt(Filename.removesuffix('.csv') + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
+    elif '.txt' in Filename:
+        np.savetxt(Filename.removesuffix('.txt') + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
 except AttributeError:
     np.savetxt(Filename[:-4] + '_spectra.csv', (processed_output), delimiter=',', header=processed_headings)
 
