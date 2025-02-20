@@ -35,7 +35,7 @@ A standard anaconda installation includes all required packages [click here for 
 
 #### Compiled .exe files ####
 *Currently this is only available for Windows systems. We hope to soon produce a MacOS release*
-* Download the zipped folder
+* Download the zipped folder from the `Releases` tab [here](https://github.com/S-Goldie/A2DfromUV/releases).
 * Extract the files into a new folder, this will contain all the program files and must be kept intact
 * Launch the application from the .exe file within this folder (for convenience you may wish to make a Desktop shortcut to this .exe file)
 
